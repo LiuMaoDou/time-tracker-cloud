@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务时间记录系统 - Cloud Pro (Debug版)</title>
+    <title>任务时间记录系统 - Cloud Pro (最终版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -434,7 +434,7 @@
             }
         }
 
-        // 按钮点击处理：本地备份 (增加错误捕获)
+        // 按钮点击处理：本地备份 (增加错误捕获 & 修改文件名格式)
         window.handleLocalBackupClick = function() {
             try {
                 const data = {
@@ -455,11 +455,18 @@
                 const blob = new Blob([jsonStr], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
+                
+                // === 修改点：Time-Tracker-月-日-时-分-秒.json ===
                 const now = new Date();
-                const timeStr = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}`;
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hour = String(now.getHours()).padStart(2, '0');
+                const minute = String(now.getMinutes()).padStart(2, '0');
+                const second = String(now.getSeconds()).padStart(2, '0');
                 
                 a.href = url;
-                a.download = `backup_${timeStr}.json`;
+                a.download = `Time-Tracker-${month}-${day}-${hour}-${minute}-${second}.json`;
+                
                 document.body.appendChild(a); // 兼容性修复：添加到DOM
                 a.click();
                 document.body.removeChild(a); // 清理
@@ -733,7 +740,6 @@
                 console.error("Firebase Save Error: ", e);
                 document.getElementById('saveStatus').textContent = '❌ 云端同步失败';
                 if (!isAuto) {
-                    // 弹出具体错误，帮助用户排查
                     if (e.code === 'permission-denied') {
                         alert("❌ 云端保存失败：权限不足\n\n请进入 Firebase Console -> Firestore Database -> Rules\n将规则修改为 allow read, write: if true;");
                     } else {
@@ -783,7 +789,6 @@
             }
           }, (error) => {
               console.error("Snapshot Listener Error:", error);
-              // 如果是权限错误，安静地在控制台显示，避免弹窗骚扰
           });
       } catch (err) {
           console.error("Firebase Init Error:", err);
