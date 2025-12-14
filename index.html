@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务时间记录系统 - Cloud Pro (UI优化版)</title>
+    <title>任务时间记录系统 - Cloud Pro (UI最终优化版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -103,8 +103,17 @@
         .file-controls label { background: var(--primary-color); color: white; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3); }
         .file-controls label:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(102, 126, 234, 0.4); }
 
-        .btn-local-save { background: white; color: var(--text-main); border: 1px solid var(--border-color); }
-        .btn-local-save:hover { background: var(--bg-gray); border-color: #cbd5e0; transform: translateY(-1px); }
+        /* 修改：本地备份按钮 - 使用浅灰色背景区分白色界面 */
+        .btn-local-save { 
+            background: #edf2f7; /* 浅灰色背景 */
+            color: var(--text-main); 
+            border: 1px solid #e2e8f0; 
+        }
+        .btn-local-save:hover { 
+            background: #e2e8f0; /* 悬停变深 */
+            border-color: #cbd5e0; 
+            transform: translateY(-1px); 
+        }
 
         .btn-finish { background: var(--info-color); color: white; box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3); margin-left: auto; }
         .btn-finish:hover { background: #3182ce; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(66, 153, 225, 0.4); }
@@ -165,7 +174,7 @@
         .btn-delete { background: #fff; color: var(--danger-color); border: 1px solid rgba(245, 101, 101, 0.2); padding: 6px 12px; font-size: 13px; }
         .btn-delete:hover { background: #fff5f5; border-color: var(--danger-color); transform: translateY(-1px); }
         
-        /* 新增：次级操作按钮（用于编辑、复盘）- 统一风格 */
+        /* 修改：次级操作按钮（编辑/复盘）- 悬停填充背景色 */
         .btn-secondary-outline {
             background: white;
             color: var(--text-sub);
@@ -175,11 +184,11 @@
             box-shadow: none;
         }
         .btn-secondary-outline:hover {
-            background: #fff;
+            background: var(--primary-color); /* 悬停变为紫色 */
             border-color: var(--primary-color);
-            color: var(--primary-color);
+            color: white; /* 文字变白 */
             transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.15);
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
         }
 
         .btn-add-todo, .btn-add-question { background: var(--secondary-color); color: white; box-shadow: 0 2px 5px rgba(118, 75, 162, 0.3); }
