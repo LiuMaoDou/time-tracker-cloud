@@ -18,7 +18,7 @@
             --danger-color: #f56565;
             --warning-color: #ed8936;
             --info-color: #4299e1;
-            --plan-color: #4a90e2; /* 新增规划板块颜色 */
+            --plan-color: #4a90e2; 
             --text-main: #2d3748;
             --text-sub: #718096;
             --bg-gray: #f7fafc;
@@ -52,7 +52,7 @@
         ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
 
         .container {
-            max-width: 1600px; /* 增加宽度以容纳4列 */
+            max-width: 1600px; 
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -72,10 +72,10 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* 修改布局支持4列 */
+        /* 布局支持4列 */
         .main-layout { display: flex; gap: 20px; }
         .left-section { flex: 1.2; min-width: 300px; }
-        .plan-section-container { flex: 1; min-width: 280px; } /* 新增 */
+        .plan-section-container { flex: 1; min-width: 280px; } 
         .middle-section { flex: 1; min-width: 280px; }
         .right-section { flex: 1; min-width: 280px; }
 
@@ -95,9 +95,9 @@
 
         .file-controls input[type="file"] { display: none; }
 
+        /* 通用按钮基础样式 */
         .file-controls label, 
-        .file-controls .btn-save,
-        .file-controls .btn-finish {
+        .file-controls button {
             padding: 10px 20px;
             border-radius: var(--radius-sm);
             cursor: pointer;
@@ -111,6 +111,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
+        /* 加载按钮 */
         .file-controls label {
             background: var(--primary-color);
             color: white;
@@ -118,13 +119,23 @@
         }
         .file-controls label:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(102, 126, 234, 0.4); }
 
-        .file-controls .btn-save { 
+        /* 本地备份按钮 (白色) */
+        .file-controls .btn-local-save { 
             background: white; 
             color: var(--text-main); 
             border: 1px solid var(--border-color); 
         }
-        .file-controls .btn-save:hover { background: var(--bg-gray); border-color: #cbd5e0; transform: translateY(-1px); }
+        .file-controls .btn-local-save:hover { background: var(--bg-gray); border-color: #cbd5e0; transform: translateY(-1px); }
 
+        /* 云端备份按钮 (紫色/主色) */
+        .file-controls .btn-cloud-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(118, 75, 162, 0.3);
+        }
+        .file-controls .btn-cloud-save:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        /* 导出表格按钮 (蓝色) */
         .file-controls .btn-finish {
             background: var(--info-color);
             color: white;
@@ -246,7 +257,7 @@
         }
         .btn-add-todo:hover, .btn-add-question:hover { background: #6b46c1; transform: translateY(-1px); }
 
-        /* 新增：添加规划按钮 */
+        /* 规划按钮 */
         .btn-add-plan {
             background: var(--plan-color);
             color: white;
@@ -326,7 +337,6 @@
             flex-direction: column;
         }
         
-        /* 列表区域滚动 */
         #recordsList, #todoList, #questionList, #planList {
             flex: 1;
             overflow-y: auto;
@@ -564,7 +574,11 @@
         <div class="file-controls">
             <label for="fileInput">📂 加载本地数据</label>
             <input type="file" id="fileInput" accept=".json" onchange="loadFromFile(event)">
-            <button class="btn-save" onclick="saveToFile()">💾 导出备份</button>
+            
+            <button class="btn-cloud-save" onclick="saveToCloudManual()">☁️ 云端备份</button>
+            
+            <button class="btn-local-save" onclick="saveToLocal()">💾 本地备份</button>
+            
             <button class="btn-finish" onclick="exportToExcel()">📊 导出表格</button>
             
             <div id="sysClock" class="clock-display">00:00:00</div>
@@ -654,10 +668,8 @@
             <div class="modal-body">
                 <label>待办内容：</label>
                 <input type="text" id="editTodoText" placeholder="输入待办事项...">
-                
                 <label>补充描述：</label>
                 <input type="text" id="editTodoSubtitle" placeholder="补充任务描述（副标题）...">
-
                 <label>截止日期：</label>
                 <input type="date" id="editTodoDeadline">
             </div>
@@ -740,10 +752,9 @@
         window.records = [];
         window.todos = [];
         window.questions = [];
-        window.dailyPlans = []; // 新增：今日规划数组
+        window.dailyPlans = []; 
         
-        // 状态追踪
-        window.currentPlanId = null; // 新增：追踪当前运行的任务是否来自规划
+        window.currentPlanId = null;
         
         let autoSaveInterval = null;
         let currentQuestionId = null;
@@ -756,7 +767,7 @@
             updateRecordsList();
             updateTodoList();
             updateQuestionList();
-            updatePlanList(); // 新增
+            updatePlanList(); 
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -764,7 +775,7 @@
             updateRecordsList();
             updateTodoList();
             updateQuestionList();
-            updatePlanList(); // 新增
+            updatePlanList(); 
             
             // 启动时钟
             updateSystemTime();
@@ -786,42 +797,87 @@
             return window.records.length > 0 || window.todos.length > 0 || window.questions.length > 0 || window.dailyPlans.length > 0 || window.currentTask !== null;
         }
 
+        // ==========================================
+        // 修改点：自动保存逻辑
+        // ==========================================
         function startAutoSave() {
+            // 每10分钟 (600,000 ms) 自动保存到云端
             autoSaveInterval = setInterval(() => {
-                saveToFile(true);
-            }, 1200000); // 20分钟自动保存
+                if (window.saveToCloud) {
+                    window.saveToCloud(true);
+                }
+            }, 600000); 
         }
 
         // ==========================================
-        // 今日规划 逻辑处理 (新增)
+        // 修改点：数据备份与云端同步功能拆分
         // ==========================================
+        
+        // 功能1：手动云端备份
+        function saveToCloudManual() {
+            if (window.saveToCloud) {
+                window.saveToCloud(false);
+            } else {
+                alert("云端服务初始化中，请稍后再试...");
+            }
+        }
+
+        // 功能2：本地备份 (下载 JSON)
+        function saveToLocal() {
+            const data = {
+                records: window.records.map(r => ({
+                    task: r.task,
+                    duration: r.duration,
+                    timestamp: r.timestamp instanceof Date ? r.timestamp.toISOString() : r.timestamp,
+                    description: r.description || ''
+                })),
+                todos: window.todos,
+                questions: window.questions,
+                dailyPlans: window.dailyPlans, 
+                
+                currentTask: window.currentTask,
+                currentPlanId: window.currentPlanId, 
+                startTime: window.startTime,
+                pausedTime: window.pausedTime,
+                isPaused: window.isPaused,
+                
+                date: new Date().toDateString(),
+                lastSaved: new Date().toISOString()
+            };
+
+            const jsonStr = JSON.stringify(data, null, 2);
+            
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const now = new Date();
+            const timeStr = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}`;
+            a.href = url;
+            a.download = `backup_${timeStr}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            updateSaveStatus('✅ 本地已备份');
+        }
+
+        // 规划相关功能
         function addDailyPlan() {
             const input = document.getElementById('planInput');
             const text = input.value.trim();
-            if (!text) {
-                alert("请输入规划内容");
-                return;
-            }
-
-            const newPlan = {
+            if (!text) { alert("请输入规划内容"); return; }
+            window.dailyPlans.push({
                 id: Date.now(),
                 content: text,
                 completed: false,
                 createdAt: new Date().toISOString()
-            };
-
-            window.dailyPlans.push(newPlan);
+            });
             input.value = '';
             updatePlanList();
         }
 
         function updatePlanList() {
             const listEl = document.getElementById('planList');
-            if (window.dailyPlans.length === 0) {
-                listEl.innerHTML = '<div class="no-records">暂无规划</div>';
-                return;
-            }
-
+            if (window.dailyPlans.length === 0) { listEl.innerHTML = '<div class="no-records">暂无规划</div>'; return; }
             listEl.innerHTML = window.dailyPlans.map(item => `
                 <div class="plan-item ${item.completed ? 'completed' : ''}">
                     <div>
@@ -838,58 +894,37 @@
             `).join('');
         }
 
-        // 按钮1：转换成今日足迹任务启动
         function startFromPlan(id) {
-            if (window.currentTask) {
-                alert("当前已有正在进行的任务，请先完成或暂停！");
-                return;
-            }
-
+            if (window.currentTask) { alert("当前已有正在进行的任务，请先完成或暂停！"); return; }
             const plan = window.dailyPlans.find(p => p.id === id);
             if (!plan) return;
-
-            // 设置输入框并触发开始
             document.getElementById('taskInput').value = plan.content;
-            window.currentPlanId = id; // 标记来源
+            window.currentPlanId = id; 
             startTask();
         }
 
-        // 按钮2：转换成待办清单
         function convertPlanToTodo(id) {
             const planIndex = window.dailyPlans.findIndex(p => p.id === id);
             if (planIndex === -1) return;
-
             const plan = window.dailyPlans[planIndex];
-
-            // 添加到待办
             window.todos.push({
                 id: Date.now(),
                 text: plan.content,
                 subtitle: "来自今日规划的迁移",
                 completed: false,
-                deadline: new Date().toISOString().split('T')[0], // 今日日期
+                deadline: new Date().toISOString().split('T')[0], 
                 createdAt: new Date().toISOString()
             });
-
-            // 从规划中删除
             window.dailyPlans.splice(planIndex, 1);
-
             updatePlanList();
             updateTodoList();
         }
 
-        // ==========================================
-        // 核心任务逻辑修改
-        // ==========================================
-
+        // 任务控制逻辑
         function startTask() {
             const taskInput = document.getElementById('taskInput');
             const taskName = taskInput.value.trim();
-            
-            if (!taskName) {
-                alert('请输入任务名称！');
-                return;
-            }
+            if (!taskName) { alert('请输入任务名称！'); return; }
 
             window.currentTask = taskName;
             window.startTime = Date.now() - window.pausedTime;
@@ -917,13 +952,10 @@
                 description: ''
             });
 
-            // 核心修改：如果是从规划开始的任务，标记规划完成
             if (window.currentPlanId) {
                 const plan = window.dailyPlans.find(p => p.id === window.currentPlanId);
-                if (plan) {
-                    plan.completed = true;
-                }
-                window.currentPlanId = null; // 重置来源
+                if (plan) plan.completed = true;
+                window.currentPlanId = null; 
                 updatePlanList();
             }
 
@@ -931,7 +963,6 @@
             resetTask();
         }
 
-        // 保持原有的 resetTask, pauseTask, updateTimer 不变
         function pauseTask() {
             if (window.isPaused) {
                 window.startTime = Date.now() - window.pausedTime;
@@ -951,7 +982,7 @@
             window.startTime = null;
             window.pausedTime = 0;
             window.isPaused = false;
-            window.currentPlanId = null; // 确保重置
+            window.currentPlanId = null; 
             
             document.getElementById('currentTaskSection').style.display = 'none';
             document.getElementById('timer').textContent = '00:00:00';
@@ -969,56 +1000,8 @@
             const hours = Math.floor(elapsed / 3600000);
             const minutes = Math.floor((elapsed % 3600000) / 60000);
             const seconds = Math.floor((elapsed % 60000) / 1000);
-            
             document.getElementById('timer').textContent = 
                 `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
-
-        // ==========================================
-        // 数据存取逻辑更新 (包含 dailyPlans)
-        // ==========================================
-        function saveToFile(isAuto = false) {
-            const data = {
-                records: window.records.map(r => ({
-                    task: r.task,
-                    duration: r.duration,
-                    timestamp: r.timestamp instanceof Date ? r.timestamp.toISOString() : r.timestamp,
-                    description: r.description || ''
-                })),
-                todos: window.todos,
-                questions: window.questions,
-                dailyPlans: window.dailyPlans, // 保存规划数据
-                
-                currentTask: window.currentTask,
-                currentPlanId: window.currentPlanId, // 保存当前任务来源
-                startTime: window.startTime,
-                pausedTime: window.pausedTime,
-                isPaused: window.isPaused,
-                
-                date: new Date().toDateString(),
-                lastSaved: new Date().toISOString()
-            };
-
-            const jsonStr = JSON.stringify(data, null, 2);
-            
-            // 云端同步
-            if (window.saveToCloud) {
-                window.saveToCloud(isAuto);
-            } else if (!isAuto) {
-                updateSaveStatus('✅ 本地已备份');
-            }
-
-            if (isAuto) return; // 自动保存不下载文件
-
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const now = new Date();
-            const timeStr = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}`;
-            a.href = url;
-            a.download = `backup_${timeStr}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
         }
 
         function confirmImport(clearRecords) {
@@ -1026,10 +1009,9 @@
 
             try {
                 const data = pendingImportData;
-                
                 window.todos = data.todos || [];
                 window.questions = data.questions || [];
-                window.dailyPlans = data.dailyPlans || []; // 导入规划
+                window.dailyPlans = data.dailyPlans || []; 
                 
                 if (!clearRecords) {
                     window.records = (data.records || []).map(r => ({
@@ -1081,7 +1063,6 @@
             }
         }
         
-        // 其他原有辅助函数
         function loadFromFile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1106,7 +1087,6 @@
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
         
-        // 待办/灵感相关函数保持不变...
         function addTodo() {
             const todoInput = document.getElementById('todoInput');
             const subtitleInput = document.getElementById('todoSubtitleInput');
@@ -1270,16 +1250,16 @@
       const db = getFirestore(app);
       const USER_DOC_ID = "my_daily_data"; 
 
-      // 1. 云端保存函数 (包含 dailyPlans)
+      // 1. 云端保存函数
       window.saveToCloud = async function(isAuto = false) {
         const data = {
             records: window.records || [],
             todos: window.todos || [],
             questions: window.questions || [],
-            dailyPlans: window.dailyPlans || [], // 同步规划
+            dailyPlans: window.dailyPlans || [], 
             
             currentTask: window.currentTask || null,
-            currentPlanId: window.currentPlanId || null, // 同步任务来源
+            currentPlanId: window.currentPlanId || null, 
             startTime: window.startTime || null,
             pausedTime: window.pausedTime || 0,
             isPaused: window.isPaused || false,
@@ -1289,14 +1269,16 @@
 
         try {
             await setDoc(doc(db, "tracker_data", USER_DOC_ID), data);
-            if (!isAuto) document.getElementById('saveStatus').textContent = '☁️ 云端保存成功';
+            
+            const statusText = isAuto ? '☁️ 云端已自动同步' : '☁️ 云端保存成功';
+            if (!isAuto) document.getElementById('saveStatus').textContent = statusText;
         } catch (e) {
             console.error("Cloud Error: ", e);
             document.getElementById('saveStatus').textContent = '❌ 云端同步失败';
         }
       };
 
-      // 2. 实时监听 (恢复 dailyPlans)
+      // 2. 实时监听
       onSnapshot(doc(db, "tracker_data", USER_DOC_ID), (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
@@ -1304,7 +1286,7 @@
             window.records = (data.records || []).map(r => ({ ...r, timestamp: r.timestamp ? new Date(r.timestamp) : new Date() }));
             window.todos = data.todos || [];
             window.questions = data.questions || [];
-            window.dailyPlans = data.dailyPlans || []; // 恢复规划
+            window.dailyPlans = data.dailyPlans || [];
             
             window.currentTask = data.currentTask;
             window.currentPlanId = data.currentPlanId;
@@ -1314,7 +1296,6 @@
 
             if (window.refreshAllUI) window.refreshAllUI();
             
-            // 恢复计时器UI状态
             const taskSection = document.getElementById('currentTaskSection');
             if (window.currentTask) {
                 taskSection.style.display = 'block';
