@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务时间记录系统 - Cloud Pro (修复版)</title>
+    <title>任务时间记录系统 - Cloud Pro (实时同步版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -106,13 +106,8 @@
         .btn-local-save { background: white; color: var(--text-main); border: 1px solid var(--border-color); }
         .btn-local-save:hover { background: var(--bg-gray); border-color: #cbd5e0; transform: translateY(-1px); }
 
-        .btn-cloud-save {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 2px 4px rgba(118, 75, 162, 0.3);
-        }
-        .btn-cloud-save:hover { filter: brightness(1.1); transform: translateY(-1px); }
-
+        /* 已移除云端备份按钮，仅保留状态显示 */
+        
         .btn-finish { background: var(--info-color); color: white; box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3); margin-left: auto; }
         .btn-finish:hover { background: #3182ce; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(66, 153, 225, 0.4); }
 
@@ -139,6 +134,7 @@
             align-items: center;
             justify-content: flex-end;
             margin-left: 15px;
+            font-weight: 500;
         }
 
         .save-indicator {
@@ -149,10 +145,10 @@
             background: var(--success-color);
             margin-right: 8px;
             box-shadow: 0 0 0 2px rgba(72, 187, 120, 0.2);
-            animation: pulse 2s infinite;
+            transition: background 0.3s;
         }
-        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); } }
 
+        /* 统一输入框样式 */
         input[type="text"], input[type="date"], textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 15px; transition: all 0.2s; background: #fff; color: var(--text-main); font-family: inherit; }
         input[type="text"]:focus, input[type="date"]:focus, textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); }
         
@@ -252,8 +248,6 @@
             <label for="fileInput">📂 加载本地数据</label>
             <input type="file" id="fileInput" accept=".json" onchange="loadFromFile(event)">
             
-            <button class="btn-cloud-save" onclick="handleCloudBackupClick()">☁️ 云端备份</button>
-            
             <button class="btn-local-save" onclick="handleLocalBackupClick()">💾 本地备份</button>
             
             <button class="btn-finish" onclick="exportToExcel()">📊 导出表格</button>
@@ -262,7 +256,7 @@
 
             <div class="auto-save-status">
                 <span class="save-indicator"></span>
-                <span id="saveStatus">就绪</span>
+                <span id="saveStatus">连接中...</span>
             </div>
         </div>
         
@@ -384,11 +378,22 @@
         window.dailyPlans = []; 
         window.currentPlanId = null;
         
-        let autoSaveInterval = null;
         let currentQuestionId = null;
         let currentRecordIndex = null;
         let currentTodoId = null;
         let pendingImportData = null;
+
+        // ==========================================
+        // 核心：实时触发同步助手函数
+        // ==========================================
+        window.triggerSync = function() {
+            if (window.saveToCloud) {
+                // 调用云端保存
+                window.saveToCloud();
+            } else {
+                console.log("Cloud not ready yet.");
+            }
+        }
 
         // 全局UI刷新
         window.refreshAllUI = function() {
@@ -399,7 +404,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            startAutoSave();
+            // 注意：不再调用 startAutoSave()
             refreshAllUI();
             updateSystemTime();
             setInterval(updateSystemTime, 1000);
@@ -414,38 +419,16 @@
             return window.records.length > 0 || window.todos.length > 0 || window.questions.length > 0 || window.dailyPlans.length > 0 || window.currentTask !== null;
         }
 
-        function startAutoSave() {
-            // 每10分钟 (600,000ms)
-            autoSaveInterval = setInterval(() => {
-                if (window.saveToCloud) window.saveToCloud(true);
-            }, 600000); 
-        }
-
-        // ==========================================
-        // 核心修复点：本地备份与云端备份的包装
-        // ==========================================
-        
-        // 辅助函数：安全转换日期（修复 invalid time value 错误）
+        // 辅助函数：安全转换日期
         function toSafeISO(val) {
             if (!val) return new Date().toISOString();
             const date = val instanceof Date ? val : new Date(val);
-            // 如果日期无效，返回当前时间作为兜底
             return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
         }
         
-        // 按钮点击处理：云端备份
-        window.handleCloudBackupClick = function() {
-            if (window.saveToCloud) {
-                window.saveToCloud(false);
-            } else {
-                alert("❌ 云端服务未连接\n请检查网络或 Firebase 配置是否正确加载。");
-            }
-        }
-
-        // 按钮点击处理：本地备份 (增加错误捕获 & 修改文件名格式 & 数据清洗)
+        // 按钮点击处理：本地备份
         window.handleLocalBackupClick = function() {
             try {
-                // 清洗数据，确保所有日期都是有效字符串
                 const data = {
                     records: window.records.map(r => ({ ...r, timestamp: toSafeISO(r.timestamp) })),
                     todos: window.todos.map(t => ({ ...t, createdAt: toSafeISO(t.createdAt) })),
@@ -465,7 +448,6 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 
-                // === 修改点：Time-Tracker-月-日-时-分-秒.json ===
                 const now = new Date();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
                 const day = String(now.getDate()).padStart(2, '0');
@@ -476,9 +458,9 @@
                 a.href = url;
                 a.download = `Time-Tracker-${month}-${day}-${hour}-${minute}-${second}.json`;
                 
-                document.body.appendChild(a); // 兼容性修复：添加到DOM
+                document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a); // 清理
+                document.body.removeChild(a); 
                 URL.revokeObjectURL(url);
                 
                 updateSaveStatus('✅ 本地已备份');
@@ -495,6 +477,7 @@
             if (!text) { alert("请输入规划内容"); return; }
             window.dailyPlans.push({ id: Date.now(), content: text, completed: false, createdAt: new Date().toISOString() });
             input.value = ''; updatePlanList();
+            triggerSync(); // 实时同步
         }
 
         function updatePlanList() {
@@ -513,6 +496,7 @@
             if (!plan) return;
             document.getElementById('taskInput').value = plan.content;
             window.currentPlanId = id; startTask();
+            // startTask 内部会 triggerSync，所以这里不需要重复
         }
 
         function convertPlanToTodo(id) {
@@ -522,6 +506,7 @@
             window.todos.push({ id: Date.now(), text: plan.content, subtitle: "来自规划迁移", completed: false, deadline: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() });
             window.dailyPlans.splice(idx, 1);
             refreshAllUI();
+            triggerSync(); // 实时同步
         }
 
         // 任务控制
@@ -533,6 +518,7 @@
             window.isPaused = false;
             updateTimerUI(true);
             window.timerInterval = setInterval(updateTimer, 1000);
+            triggerSync(); // 实时同步
         }
 
         function stopTask() {
@@ -546,6 +532,7 @@
             }
             refreshAllUI();
             resetTask();
+            triggerSync(); // 实时同步
         }
 
         function pauseTask() {
@@ -560,6 +547,7 @@
                 window.isPaused = true;
                 document.getElementById('pauseBtn').textContent = '继续';
             }
+            triggerSync(); // 实时同步（记录暂停状态）
         }
 
         function resetTask() {
@@ -595,7 +583,6 @@
             document.getElementById('timer').textContent = formatDuration(elapsed);
         }
 
-        // 安全导入逻辑：防止 Invalid Date 混入
         function confirmImport(clearRecords) {
             if (!pendingImportData) return;
             try {
@@ -605,7 +592,6 @@
                 window.dailyPlans = data.dailyPlans || [];
                 
                 if (!clearRecords) {
-                    // 在导入时检查日期有效性
                     window.records = (data.records || []).map(r => {
                         const d = new Date(r.timestamp);
                         return { ...r, timestamp: isNaN(d.getTime()) ? new Date() : d };
@@ -628,7 +614,7 @@
                 refreshAllUI();
                 closeImportModal();
                 updateSaveStatus('✅ 数据导入成功！');
-                if (window.saveToCloud) window.saveToCloud(true);
+                triggerSync(); // 实时同步
             } catch (err) { alert("导入错误：" + err.message); }
         }
         
@@ -660,8 +646,19 @@
             window.todos.push({ id: Date.now(), text, subtitle: document.getElementById('todoSubtitleInput').value.trim(), completed: false, deadline: document.getElementById('todoDeadline').value || null });
             document.getElementById('todoInput').value = ''; 
             updateTodoList();
+            triggerSync(); // 实时同步
         }
-        function toggleTodo(id) { const t = window.todos.find(x => x.id === id); if(t) { t.completed = !t.completed; updateTodoList(); } }
+        function toggleTodo(id) { 
+            const t = window.todos.find(x => x.id === id); 
+            if(t) { 
+                t.completed = !t.completed; 
+                updateTodoList(); 
+                // 如果是已完成，会触发 UI 的 filter，但在那之前先同步状态
+                triggerSync(); 
+                // 如果 UI 有延迟删除逻辑，再次同步
+                if(t.completed) setTimeout(() => { window.todos = window.todos.filter(x => x.id !== id); updateTodoList(); triggerSync(); }, 500);
+            } 
+        }
         function updateTodoList() {
             const list = document.getElementById('todoList');
             if(window.todos.length===0) return list.innerHTML = '<div class="no-records">暂无待办</div>';
@@ -674,18 +671,18 @@
         }
         function openTodoEditModal(id) { currentTodoId = id; const t = window.todos.find(x=>x.id===id); if(t){ document.getElementById('editTodoText').value=t.text; document.getElementById('editTodoSubtitle').value=t.subtitle||''; document.getElementById('editTodoDeadline').value=t.deadline||''; document.getElementById('todoEditModal').style.display='block'; }}
         function closeTodoEditModal() { document.getElementById('todoEditModal').style.display='none'; currentTodoId=null; }
-        function saveTodoEdit() { const t = window.todos.find(x=>x.id===currentTodoId); if(t){ t.text=document.getElementById('editTodoText').value; t.subtitle=document.getElementById('editTodoSubtitle').value; t.deadline=document.getElementById('editTodoDeadline').value; updateTodoList(); closeTodoEditModal(); }}
+        function saveTodoEdit() { const t = window.todos.find(x=>x.id===currentTodoId); if(t){ t.text=document.getElementById('editTodoText').value; t.subtitle=document.getElementById('editTodoSubtitle').value; t.deadline=document.getElementById('editTodoDeadline').value; updateTodoList(); closeTodoEditModal(); triggerSync(); }}
 
-        function addQuestion() { const v = document.getElementById('questionInput').value.trim(); if(!v)return alert('请输入内容'); window.questions.push({id:Date.now(), question:v, answer:'', answered:false}); document.getElementById('questionInput').value=''; updateQuestionList(); }
+        function addQuestion() { const v = document.getElementById('questionInput').value.trim(); if(!v)return alert('请输入内容'); window.questions.push({id:Date.now(), question:v, answer:'', answered:false}); document.getElementById('questionInput').value=''; updateQuestionList(); triggerSync(); }
         function updateQuestionList() {
             const list = document.getElementById('questionList');
             if(window.questions.length===0) return list.innerHTML = '<div class="no-records">暂无灵感</div>';
             list.innerHTML = window.questions.map(q => `<div class="question-item ${q.answered?'answered':''}"><div class="question-content" onclick="openAnswerModal(${q.id})"><div class="question-text">${q.question}</div></div><button class="btn-small btn-delete" onclick="deleteQuestion(${q.id})">删除</button></div>`).join('');
         }
-        function deleteQuestion(id) { if(confirm('删除?')) { window.questions=window.questions.filter(q=>q.id!==id); updateQuestionList(); } }
+        function deleteQuestion(id) { if(confirm('删除?')) { window.questions=window.questions.filter(q=>q.id!==id); updateQuestionList(); triggerSync(); } }
         function openAnswerModal(id) { currentQuestionId=id; const q=window.questions.find(x=>x.id===id); if(q){ document.getElementById('modalQuestionText').textContent=q.question; document.getElementById('answerInput').value=q.answer||''; document.getElementById('answerModal').style.display='block'; }}
         function closeAnswerModal() { document.getElementById('answerModal').style.display='none'; currentQuestionId=null; }
-        function saveAnswer() { const q=window.questions.find(x=>x.id===currentQuestionId); if(q){ q.answer=document.getElementById('answerInput').value; q.answered=!!q.answer; updateQuestionList(); closeAnswerModal(); }}
+        function saveAnswer() { const q=window.questions.find(x=>x.id===currentQuestionId); if(q){ q.answer=document.getElementById('answerInput').value; q.answered=!!q.answer; updateQuestionList(); closeAnswerModal(); triggerSync(); }}
 
         function updateRecordsList() {
             const list = document.getElementById('recordsList');
@@ -699,7 +696,7 @@
         }
         function openDescModal(idx) { currentRecordIndex=idx; document.getElementById('modalRecordTask').textContent=window.records[idx].task; document.getElementById('descInput').value=window.records[idx].description||''; document.getElementById('descModal').style.display='block'; }
         function closeDescModal() { document.getElementById('descModal').style.display='none'; currentRecordIndex=null; }
-        function saveDescription() { if(currentRecordIndex!==null) { window.records[currentRecordIndex].description=document.getElementById('descInput').value; updateRecordsList(); closeDescModal(); }}
+        function saveDescription() { if(currentRecordIndex!==null) { window.records[currentRecordIndex].description=document.getElementById('descInput').value; updateRecordsList(); closeDescModal(); triggerSync(); }}
 
         function exportToExcel() {
             if(window.records.length===0) return alert('无数据');
@@ -731,20 +728,19 @@
           const db = getFirestore(app);
           const USER_DOC_ID = "my_daily_data"; 
 
-          // 1. 云端保存
-          window.saveToCloud = async function(isAuto = false) {
-            // 定义清洗函数：如果是 Invalid Date，则使用当前时间
+          // 1. 云端保存 (仅保留手动触发，移除 isAuto 参数判断)
+          window.saveToCloud = async function() {
+            // 状态显示为同步中
+            document.getElementById('saveStatus').textContent = '⏳ 同步中...';
+            
             const safeDate = (d) => {
-                if (d instanceof Date) {
-                    return isNaN(d) ? new Date().toISOString() : d.toISOString();
-                }
+                if (d instanceof Date) return isNaN(d) ? new Date().toISOString() : d.toISOString();
                 if (!d) return new Date().toISOString();
                 const t = new Date(d);
                 return isNaN(t) ? new Date().toISOString() : t.toISOString();
             };
 
             const data = {
-                // 对所有可能的日期字段进行清洗
                 records: (window.records || []).map(r => ({ ...r, timestamp: safeDate(r.timestamp) })),
                 todos: (window.todos || []).map(t => ({ ...t, createdAt: safeDate(t.createdAt) })),
                 questions: (window.questions || []).map(q => ({ ...q, createdAt: safeDate(q.createdAt) })),
@@ -759,26 +755,19 @@
 
             try {
                 await setDoc(doc(db, "tracker_data", USER_DOC_ID), data);
-                const statusText = isAuto ? '☁️ 云端已自动同步' : '☁️ 云端保存成功';
-                document.getElementById('saveStatus').textContent = statusText;
+                document.getElementById('saveStatus').textContent = '☁️ 已同步';
             } catch (e) {
                 console.error("Firebase Save Error: ", e);
-                document.getElementById('saveStatus').textContent = '❌ 云端同步失败';
-                if (!isAuto) {
-                    if (e.code === 'permission-denied') {
-                        alert("❌ 云端保存失败：权限不足\n\n请进入 Firebase Console -> Firestore Database -> Rules\n将规则修改为 allow read, write: if true;");
-                    } else {
-                        alert("❌ 云端保存失败：\n" + e.message);
-                    }
-                }
+                document.getElementById('saveStatus').textContent = '❌ 同步失败';
             }
           };
 
-          // 2. 实时监听
+          // 2. 实时监听 (接收多端更新)
           onSnapshot(doc(db, "tracker_data", USER_DOC_ID), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                // 恢复数据时，防止 Invalid Date 产生
+                // 仅当远程数据比本地新，或用于初始加载时，才全量覆盖
+                // 这里为了简化，假设多端同步始终以最新到达的数据为准
                 window.records = (data.records || []).map(r => {
                     const d = r.timestamp ? new Date(r.timestamp) : new Date();
                     return { ...r, timestamp: isNaN(d) ? new Date() : d };
@@ -794,7 +783,6 @@
 
                 if (window.refreshAllUI) window.refreshAllUI();
                 
-                // 恢复计时器状态
                 if (window.currentTask) {
                     if (window.timerInterval) clearInterval(window.timerInterval);
                     document.getElementById('currentTaskSection').style.display = 'block';
@@ -813,14 +801,12 @@
                         if(window.updateTimer) window.updateTimer();
                     }
                 }
-                document.getElementById('saveStatus').textContent = '☁️ 数据已同步';
+                document.getElementById('saveStatus').textContent = '☁️ 已同步';
             }
-          }, (error) => {
-              console.error("Snapshot Listener Error:", error);
           });
       } catch (err) {
           console.error("Firebase Init Error:", err);
-          alert("Firebase 初始化失败，云端功能不可用。\n" + err.message);
+          document.getElementById('saveStatus').textContent = '❌ 连接失败';
       }
     </script>
 </body>
