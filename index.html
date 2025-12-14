@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务时间记录系统 - Cloud Pro (最终完整版)</title>
+    <title>任务时间记录系统 - Cloud Pro (优化修复版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -301,11 +301,44 @@
         .modal-body label:first-child { margin-top: 0; }
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
 
+        /* 新增：加载遮罩层样式 */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Ubuntu', sans-serif;
+            color: var(--primary-color);
+            transition: opacity 0.5s ease;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         @media (max-width: 1200px) { .main-layout { flex-wrap: wrap; } .left-section, .plan-section-container, .middle-section, .right-section { flex: 1 1 45%; } }
         @media (max-width: 768px) { .main-layout { flex-direction: column; } .container { padding: 20px; } .file-controls { flex-direction: column; align-items: stretch; } .file-controls .btn-finish { margin-left: 0; margin-top: 10px; } .clock-display { margin-left: 0; margin-top: 10px; justify-content: center; } .auto-save-status { justify-content: center; margin-top: 10px; margin-left: 0; } }
     </style>
 </head>
 <body>
+    <div id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div style="font-weight: 600; font-size: 18px;">☁️ 正在从云端同步数据...</div>
+    </div>
+
     <div class="container">
         <h1>⏱️ 任务时间记录系统 - Cloud Pro</h1>
         
@@ -472,7 +505,8 @@
             refreshAllUI();
             updateSystemTime();
             setInterval(updateSystemTime, 1000);
-            if (!checkIfHasData()) updateSaveStatus('就绪');
+            // 初始状态下不显示“就绪”，等待云端加载
+            updateSaveStatus('连接中...');
         });
         
         function updateSystemTime() {
@@ -834,6 +868,9 @@
         measurementId: "G-HN93S2R6WX"
       };
 
+      // 关键修复 1：定义全局加载状态锁
+      let isDataLoaded = false;
+
       try {
           const app = initializeApp(firebaseConfig);
           const db = getFirestore(app);
@@ -841,6 +878,12 @@
 
           // 1. 云端保存
           window.saveToCloud = async function() {
+            // 关键修复 2：如果数据尚未加载完成，禁止保存，防止覆盖
+            if (!isDataLoaded) {
+                console.warn("云端数据尚未加载，跳过保存操作。");
+                return;
+            }
+
             document.getElementById('saveStatus').textContent = '⏳ 同步中...';
             
             const safeDate = (d) => {
@@ -864,7 +907,8 @@
             };
 
             try {
-                await setDoc(doc(db, "tracker_data", USER_DOC_ID), data);
+                // 关键修复 3：使用 merge: true 防止意外覆盖其他字段
+                await setDoc(doc(db, "tracker_data", USER_DOC_ID), data, { merge: true });
                 document.getElementById('saveStatus').textContent = '☁️ 已同步';
             } catch (e) {
                 console.error("Firebase Save Error: ", e);
@@ -874,6 +918,17 @@
 
           // 2. 实时监听
           onSnapshot(doc(db, "tracker_data", USER_DOC_ID), (docSnap) => {
+            
+            // 收到数据后，移除遮罩层
+            const loader = document.getElementById('loadingOverlay');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }
+
+            // 关键修复 4：标记数据已加载，解锁保存功能
+            isDataLoaded = true;
+
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 window.records = (data.records || []).map(r => {
@@ -910,11 +965,16 @@
                     }
                 }
                 document.getElementById('saveStatus').textContent = '☁️ 已同步';
+            } else {
+                // 针对新用户（文档不存在），也视为加载完毕，允许他们开始创建数据
+                document.getElementById('saveStatus').textContent = '☁️ 就绪 (新数据)';
             }
           });
       } catch (err) {
           console.error("Firebase Init Error:", err);
           document.getElementById('saveStatus').textContent = '❌ 连接失败';
+          // 如果连接失败，去掉遮罩，允许用户离线使用（虽然无法同步）
+          document.getElementById('loadingOverlay').style.display = 'none';
       }
     </script>
 </body>
