@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务时间记录系统 - Cloud Pro (最终轻量版)</title>
+    <title>任务时间记录系统 - Cloud Pro (最终完整版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -173,7 +173,7 @@
         .btn-delete { background: #fff; color: var(--danger-color); border: 1px solid rgba(245, 101, 101, 0.2); padding: 6px 12px; font-size: 13px; }
         .btn-delete:hover { background: #fff5f5; border-color: var(--danger-color); transform: translateY(-1px); }
         
-        /* 待办编辑按钮 (悬停只变浅蓝背景) */
+        /* 待办编辑按钮 */
         .btn-edit-outline {
             background: white;
             color: var(--info-color);
@@ -183,14 +183,14 @@
             box-shadow: none;
         }
         .btn-edit-outline:hover {
-            background: #ebf8ff; /* 浅蓝色背景 */
+            background: #ebf8ff; 
             color: var(--info-color); 
             border-color: var(--info-color); 
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(66, 153, 225, 0.15);
         }
 
-        /* 复盘按钮 (悬停只变浅橙背景) */
+        /* 复盘按钮 */
         .btn-review-outline {
             background: white;
             color: var(--warning-color);
@@ -200,9 +200,9 @@
             box-shadow: none;
         }
         .btn-review-outline:hover {
-            background: #fffaf0; /* 浅橙色背景 */
-            color: var(--warning-color);
-            border-color: var(--warning-color);
+            background: #fffaf0; 
+            color: var(--warning-color); 
+            border-color: var(--warning-color); 
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(237, 137, 54, 0.15);
         }
@@ -215,16 +215,16 @@
         .btn-save-modal:hover { background: var(--bg-gray); border-color: #cbd5e0; }
         .btn-small { padding: 6px 12px; font-size: 13px; }
 
-        /* 修改：将输入框区域改为浅灰色背景，以在白色卡片中凸显 */
+        /* 输入框区域样式 */
         .task-input-section, .todo-input-section, .question-input-section, .plan-input-section { 
             display: flex; 
             flex-direction: column; 
             gap: 12px; 
             margin-bottom: 25px; 
-            background: var(--bg-gray); /* 浅灰背景 */
+            background: var(--bg-gray); 
             padding: 15px; 
             border-radius: var(--radius-sm); 
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02); /* 轻微内阴影 */
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02); 
             border: 1px solid var(--border-color);
         }
         .task-input-section input { width: 100%; }
@@ -236,17 +236,17 @@
         #currentTaskName { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; }
         .timer { font-size: 48px; font-weight: 700; color: var(--primary-color); font-variant-numeric: tabular-nums; text-shadow: 0 2px 4px rgba(102, 126, 234, 0.2); }
 
-        /* 修改：四大主题框样式 - 纯白背景 + 轻阴影 + 边框 */
+        /* 四大主题框样式 */
         .records, .todo-section, .question-section, .plan-section { 
             margin-bottom: 20px; 
-            background: #fff; /* 纯白背景 */
+            background: #fff; 
             padding: 25px; 
             border-radius: var(--radius-md); 
-            border: 1px solid var(--border-color); /* 增加边框 */
+            border: 1px solid var(--border-color); 
             height: 100%; 
             display: flex; 
             flex-direction: column;
-            box-shadow: var(--shadow-sm); /* 轻微阴影，同顶部栏 */
+            box-shadow: var(--shadow-sm);
         }
         
         #recordsList, #todoList, #questionList, #planList { flex: 1; overflow-y: auto; padding-right: 5px; }
@@ -751,24 +751,71 @@
         function updateRecordsList() {
             const list = document.getElementById('recordsList');
             if(window.records.length===0) return list.innerHTML = '<div class="no-records">无记录</div>';
-            list.innerHTML = window.records.slice().reverse().map((r, i) => `
+            list.innerHTML = window.records.slice().reverse().map((r, i) => {
+                let timeStr = '';
+                try {
+                    const end = r.timestamp instanceof Date ? r.timestamp : new Date(r.timestamp);
+                    if (!isNaN(end.getTime())) {
+                        const start = new Date(end.getTime() - r.duration);
+                        const formatTime = (date) => date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+                        timeStr = `${formatTime(start)} - ${formatTime(end)}`;
+                    }
+                } catch (e) { console.error(e); }
+
+                return `
                 <div class="record-item">
-                    <div class="record-header"><div><div class="record-task">${r.task}</div></div><div class="record-time">${formatDuration(r.duration)}</div></div>
+                    <div class="record-header">
+                        <div>
+                            <div class="record-task">${r.task}</div>
+                            <div style="font-size: 12px; color: var(--text-sub); margin-top: 4px;">${timeStr}</div>
+                        </div>
+                        <div class="record-time">${formatDuration(r.duration)}</div>
+                    </div>
                     ${r.description?`<div class="record-desc">${r.description}</div>`:''}
                     <div style="margin-top:10px"><button class="btn-small btn-review-outline" onclick="openDescModal(${window.records.length-1-i})">${r.description?'编辑':'添加'}复盘</button></div>
-                </div>`).join('');
+                </div>`;
+            }).join('');
         }
         function openDescModal(idx) { currentRecordIndex=idx; document.getElementById('modalRecordTask').textContent=window.records[idx].task; document.getElementById('descInput').value=window.records[idx].description||''; document.getElementById('descModal').style.display='block'; }
         function closeDescModal() { document.getElementById('descModal').style.display='none'; currentRecordIndex=null; }
         function saveDescription() { if(currentRecordIndex!==null) { window.records[currentRecordIndex].description=document.getElementById('descInput').value; updateRecordsList(); closeDescModal(); triggerSync(); }}
 
+        // 修改：导出表格逻辑，增加时间列
         function exportToExcel() {
-            if(window.records.length===0) return alert('无数据');
-            const data = window.records.map((r,i) => ({ '序号':i+1, '任务':r.task, '用时':formatDuration(r.duration), '复盘':r.description||'' }));
+            if (window.records.length === 0) return alert('无数据');
+            
+            const data = window.records.map((r, i) => {
+                let startStr = '--:--';
+                let endStr = '--:--';
+                
+                try {
+                    const end = r.timestamp instanceof Date ? r.timestamp : new Date(r.timestamp);
+                    if (!isNaN(end.getTime())) {
+                        const start = new Date(end.getTime() - r.duration);
+                        const fmt = d => d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+                        startStr = fmt(start);
+                        endStr = fmt(end);
+                    }
+                } catch (e) {
+                    console.error("Export time error", e);
+                }
+
+                return {
+                    '序号': i + 1,
+                    '任务名称': r.task,
+                    '开始时间': startStr,
+                    '结束时间': endStr,
+                    '总耗时': formatDuration(r.duration),
+                    '复盘内容': r.description || ''
+                };
+            });
+
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Records');
-            XLSX.writeFile(wb, `Report_${new Date().toISOString().slice(0,10)}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, '工作记录');
+            
+            const dateStr = new Date().toISOString().slice(0,10);
+            XLSX.writeFile(wb, `Report_${dateStr}.xlsx`);
         }
         window.onclick = e => { if(e.target.classList.contains('modal')) e.target.style.display = 'none'; }
     </script>
@@ -792,9 +839,8 @@
           const db = getFirestore(app);
           const USER_DOC_ID = "my_daily_data"; 
 
-          // 1. 云端保存 (仅保留手动触发，移除 isAuto 参数判断)
+          // 1. 云端保存
           window.saveToCloud = async function() {
-            // 状态显示为同步中
             document.getElementById('saveStatus').textContent = '⏳ 同步中...';
             
             const safeDate = (d) => {
@@ -826,12 +872,10 @@
             }
           };
 
-          // 2. 实时监听 (接收多端更新)
+          // 2. 实时监听
           onSnapshot(doc(db, "tracker_data", USER_DOC_ID), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                // 仅当远程数据比本地新，或用于初始加载时，才全量覆盖
-                // 这里为了简化，假设多端同步始终以最新到达的数据为准
                 window.records = (data.records || []).map(r => {
                     const d = r.timestamp ? new Date(r.timestamp) : new Date();
                     return { ...r, timestamp: isNaN(d) ? new Date() : d };
