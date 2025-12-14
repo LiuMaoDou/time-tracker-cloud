@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务时间记录系统 - Cloud Pro (最终版)</title>
+    <title>任务时间记录系统 - Cloud Pro (修复版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -425,6 +425,14 @@
         // 核心修复点：本地备份与云端备份的包装
         // ==========================================
         
+        // 辅助函数：安全转换日期（修复 invalid time value 错误）
+        function toSafeISO(val) {
+            if (!val) return new Date().toISOString();
+            const date = val instanceof Date ? val : new Date(val);
+            // 如果日期无效，返回当前时间作为兜底
+            return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+        }
+        
         // 按钮点击处理：云端备份
         window.handleCloudBackupClick = function() {
             if (window.saveToCloud) {
@@ -434,14 +442,15 @@
             }
         }
 
-        // 按钮点击处理：本地备份 (增加错误捕获 & 修改文件名格式)
+        // 按钮点击处理：本地备份 (增加错误捕获 & 修改文件名格式 & 数据清洗)
         window.handleLocalBackupClick = function() {
             try {
+                // 清洗数据，确保所有日期都是有效字符串
                 const data = {
-                    records: window.records,
-                    todos: window.todos,
-                    questions: window.questions,
-                    dailyPlans: window.dailyPlans, 
+                    records: window.records.map(r => ({ ...r, timestamp: toSafeISO(r.timestamp) })),
+                    todos: window.todos.map(t => ({ ...t, createdAt: toSafeISO(t.createdAt) })),
+                    questions: window.questions.map(q => ({ ...q, createdAt: toSafeISO(q.createdAt) })),
+                    dailyPlans: window.dailyPlans.map(p => ({ ...p, createdAt: toSafeISO(p.createdAt) })), 
                     currentTask: window.currentTask,
                     currentPlanId: window.currentPlanId, 
                     startTime: window.startTime,
@@ -586,6 +595,7 @@
             document.getElementById('timer').textContent = formatDuration(elapsed);
         }
 
+        // 安全导入逻辑：防止 Invalid Date 混入
         function confirmImport(clearRecords) {
             if (!pendingImportData) return;
             try {
@@ -595,7 +605,11 @@
                 window.dailyPlans = data.dailyPlans || [];
                 
                 if (!clearRecords) {
-                    window.records = (data.records || []).map(r => ({ ...r, timestamp: new Date(r.timestamp) }));
+                    // 在导入时检查日期有效性
+                    window.records = (data.records || []).map(r => {
+                        const d = new Date(r.timestamp);
+                        return { ...r, timestamp: isNaN(d.getTime()) ? new Date() : d };
+                    });
                     window.currentTask = data.currentTask;
                     window.currentPlanId = data.currentPlanId || null;
                     window.startTime = data.startTime;
@@ -719,11 +733,22 @@
 
           // 1. 云端保存
           window.saveToCloud = async function(isAuto = false) {
+            // 定义清洗函数：如果是 Invalid Date，则使用当前时间
+            const safeDate = (d) => {
+                if (d instanceof Date) {
+                    return isNaN(d) ? new Date().toISOString() : d.toISOString();
+                }
+                if (!d) return new Date().toISOString();
+                const t = new Date(d);
+                return isNaN(t) ? new Date().toISOString() : t.toISOString();
+            };
+
             const data = {
-                records: window.records || [],
-                todos: window.todos || [],
-                questions: window.questions || [],
-                dailyPlans: window.dailyPlans || [], 
+                // 对所有可能的日期字段进行清洗
+                records: (window.records || []).map(r => ({ ...r, timestamp: safeDate(r.timestamp) })),
+                todos: (window.todos || []).map(t => ({ ...t, createdAt: safeDate(t.createdAt) })),
+                questions: (window.questions || []).map(q => ({ ...q, createdAt: safeDate(q.createdAt) })),
+                dailyPlans: (window.dailyPlans || []).map(p => ({ ...p, createdAt: safeDate(p.createdAt) })), 
                 currentTask: window.currentTask || null,
                 currentPlanId: window.currentPlanId || null, 
                 startTime: window.startTime || null,
@@ -753,8 +778,11 @@
           onSnapshot(doc(db, "tracker_data", USER_DOC_ID), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                // 恢复数据
-                window.records = (data.records || []).map(r => ({ ...r, timestamp: r.timestamp ? new Date(r.timestamp) : new Date() }));
+                // 恢复数据时，防止 Invalid Date 产生
+                window.records = (data.records || []).map(r => {
+                    const d = r.timestamp ? new Date(r.timestamp) : new Date();
+                    return { ...r, timestamp: isNaN(d) ? new Date() : d };
+                });
                 window.todos = data.todos || [];
                 window.questions = data.questions || [];
                 window.dailyPlans = data.dailyPlans || [];
