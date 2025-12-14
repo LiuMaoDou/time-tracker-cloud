@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务时间记录系统 - Cloud Pro (UI最终版)</title>
+    <title>任务时间记录系统 - Cloud Pro (最终版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -19,7 +19,6 @@
             --warning-color: #ed8936;
             --info-color: #4299e1;
             --plan-color: #4a90e2; 
-            --backup-color: #4a5568; 
             --text-main: #2d3748;
             --text-sub: #718096;
             --bg-gray: #f7fafc;
@@ -104,15 +103,16 @@
         .file-controls label { background: var(--primary-color); color: white; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3); }
         .file-controls label:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(102, 126, 234, 0.4); }
 
+        /* 修改：本地备份按钮 - 颜色与“加载”按钮保持一致 (主色紫) */
         .btn-local-save { 
-            background: var(--backup-color); 
+            background: var(--primary-color); 
             color: white; 
-            box-shadow: 0 2px 4px rgba(74, 85, 104, 0.3);
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
         }
         .btn-local-save:hover { 
-            background: #2d3748; 
             transform: translateY(-1px); 
-            box-shadow: 0 4px 6px rgba(74, 85, 104, 0.4);
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.4);
+            filter: brightness(1.1); /* 略微提亮以增加交互感 */
         }
 
         .btn-finish { background: var(--info-color); color: white; box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3); margin-left: auto; }
@@ -155,6 +155,7 @@
             transition: background 0.3s;
         }
 
+        /* 统一输入框样式 */
         input[type="text"], input[type="date"], textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 15px; transition: all 0.2s; background: #fff; color: var(--text-main); font-family: inherit; }
         input[type="text"]:focus, input[type="date"]:focus, textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); }
         
@@ -172,7 +173,7 @@
         .btn-delete { background: #fff; color: var(--danger-color); border: 1px solid rgba(245, 101, 101, 0.2); padding: 6px 12px; font-size: 13px; }
         .btn-delete:hover { background: #fff5f5; border-color: var(--danger-color); transform: translateY(-1px); }
         
-        /* 修改点：待办编辑按钮 (悬停只变浅蓝背景) */
+        /* 待办编辑按钮 (悬停只变浅蓝背景) */
         .btn-edit-outline {
             background: white;
             color: var(--info-color);
@@ -183,13 +184,13 @@
         }
         .btn-edit-outline:hover {
             background: #ebf8ff; /* 浅蓝色背景 */
-            color: var(--info-color); /* 文字保持蓝色 */
-            border-color: var(--info-color); /* 边框保持蓝色 */
+            color: var(--info-color); 
+            border-color: var(--info-color); 
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(66, 153, 225, 0.15);
         }
 
-        /* 修改点：复盘按钮 (悬停只变浅橙背景) */
+        /* 复盘按钮 (悬停只变浅橙背景) */
         .btn-review-outline {
             background: white;
             color: var(--warning-color);
@@ -200,8 +201,8 @@
         }
         .btn-review-outline:hover {
             background: #fffaf0; /* 浅橙色背景 */
-            color: var(--warning-color); /* 文字保持橙色 */
-            border-color: var(--warning-color); /* 边框保持橙色 */
+            color: var(--warning-color);
+            border-color: var(--warning-color);
             transform: translateY(-1px);
             box-shadow: 0 2px 4px rgba(237, 137, 54, 0.15);
         }
