@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务时间记录系统 - Cloud Pro (UI最终优化版)</title>
+    <title>任务时间记录系统 - Cloud Pro (UI最终版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -19,6 +19,7 @@
             --warning-color: #ed8936;
             --info-color: #4299e1;
             --plan-color: #4a90e2; 
+            --backup-color: #4a5568; 
             --text-main: #2d3748;
             --text-sub: #718096;
             --bg-gray: #f7fafc;
@@ -103,16 +104,15 @@
         .file-controls label { background: var(--primary-color); color: white; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3); }
         .file-controls label:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(102, 126, 234, 0.4); }
 
-        /* 修改：本地备份按钮 - 使用浅灰色背景区分白色界面 */
         .btn-local-save { 
-            background: #edf2f7; /* 浅灰色背景 */
-            color: var(--text-main); 
-            border: 1px solid #e2e8f0; 
+            background: var(--backup-color); 
+            color: white; 
+            box-shadow: 0 2px 4px rgba(74, 85, 104, 0.3);
         }
         .btn-local-save:hover { 
-            background: #e2e8f0; /* 悬停变深 */
-            border-color: #cbd5e0; 
+            background: #2d3748; 
             transform: translateY(-1px); 
+            box-shadow: 0 4px 6px rgba(74, 85, 104, 0.4);
         }
 
         .btn-finish { background: var(--info-color); color: white; box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3); margin-left: auto; }
@@ -155,7 +155,6 @@
             transition: background 0.3s;
         }
 
-        /* 统一输入框样式 */
         input[type="text"], input[type="date"], textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 15px; transition: all 0.2s; background: #fff; color: var(--text-main); font-family: inherit; }
         input[type="text"]:focus, input[type="date"]:focus, textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); }
         
@@ -170,25 +169,41 @@
         .btn-stop { background: var(--danger-color); color: white; box-shadow: 0 2px 5px rgba(245, 101, 101, 0.3); }
         .btn-stop:hover:not(:disabled) { background: #e53e3e; transform: translateY(-1px); }
         
-        /* 删除按钮 */
         .btn-delete { background: #fff; color: var(--danger-color); border: 1px solid rgba(245, 101, 101, 0.2); padding: 6px 12px; font-size: 13px; }
         .btn-delete:hover { background: #fff5f5; border-color: var(--danger-color); transform: translateY(-1px); }
         
-        /* 修改：次级操作按钮（编辑/复盘）- 悬停填充背景色 */
-        .btn-secondary-outline {
+        /* 修改点：待办编辑按钮 (悬停只变浅蓝背景) */
+        .btn-edit-outline {
             background: white;
-            color: var(--text-sub);
-            border: 1px solid var(--border-color);
+            color: var(--info-color);
+            border: 1px solid var(--info-color);
             padding: 6px 12px;
             font-size: 13px;
             box-shadow: none;
         }
-        .btn-secondary-outline:hover {
-            background: var(--primary-color); /* 悬停变为紫色 */
-            border-color: var(--primary-color);
-            color: white; /* 文字变白 */
+        .btn-edit-outline:hover {
+            background: #ebf8ff; /* 浅蓝色背景 */
+            color: var(--info-color); /* 文字保持蓝色 */
+            border-color: var(--info-color); /* 边框保持蓝色 */
             transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 4px rgba(66, 153, 225, 0.15);
+        }
+
+        /* 修改点：复盘按钮 (悬停只变浅橙背景) */
+        .btn-review-outline {
+            background: white;
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+            padding: 6px 12px;
+            font-size: 13px;
+            box-shadow: none;
+        }
+        .btn-review-outline:hover {
+            background: #fffaf0; /* 浅橙色背景 */
+            color: var(--warning-color); /* 文字保持橙色 */
+            border-color: var(--warning-color); /* 边框保持橙色 */
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(237, 137, 54, 0.15);
         }
 
         .btn-add-todo, .btn-add-question { background: var(--secondary-color); color: white; box-shadow: 0 2px 5px rgba(118, 75, 162, 0.3); }
@@ -692,7 +707,7 @@
                 <div class="todo-item ${t.completed?'completed':''}">
                     <div class="todo-header"><input type="checkbox" class="todo-checkbox" ${t.completed?'checked':''} onchange="toggleTodo(${t.id})">
                     <div class="todo-content"><div class="todo-text">${t.text}</div>${t.subtitle?`<div class="todo-subtitle">${t.subtitle}</div>`:''}${t.deadline?`<div class="todo-deadline">${t.deadline}</div>`:''}</div></div>
-                    <button class="btn-small btn-secondary-outline" onclick="openTodoEditModal(${t.id})">编辑</button>
+                    <button class="btn-small btn-edit-outline" onclick="openTodoEditModal(${t.id})">编辑</button>
                 </div>`).join('');
         }
         function openTodoEditModal(id) { currentTodoId = id; const t = window.todos.find(x=>x.id===id); if(t){ document.getElementById('editTodoText').value=t.text; document.getElementById('editTodoSubtitle').value=t.subtitle||''; document.getElementById('editTodoDeadline').value=t.deadline||''; document.getElementById('todoEditModal').style.display='block'; }}
@@ -717,7 +732,7 @@
                 <div class="record-item">
                     <div class="record-header"><div><div class="record-task">${r.task}</div></div><div class="record-time">${formatDuration(r.duration)}</div></div>
                     ${r.description?`<div class="record-desc">${r.description}</div>`:''}
-                    <div style="margin-top:10px"><button class="btn-small btn-secondary-outline" onclick="openDescModal(${window.records.length-1-i})">${r.description?'编辑':'添加'}复盘</button></div>
+                    <div style="margin-top:10px"><button class="btn-small btn-review-outline" onclick="openDescModal(${window.records.length-1-i})">${r.description?'编辑':'添加'}复盘</button></div>
                 </div>`).join('');
         }
         function openDescModal(idx) { currentRecordIndex=idx; document.getElementById('modalRecordTask').textContent=window.records[idx].task; document.getElementById('descInput').value=window.records[idx].description||''; document.getElementById('descModal').style.display='block'; }
