@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务时间记录系统 - Cloud Pro (实时同步版)</title>
+    <title>任务时间记录系统 - Cloud Pro (UI优化版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
@@ -106,8 +106,6 @@
         .btn-local-save { background: white; color: var(--text-main); border: 1px solid var(--border-color); }
         .btn-local-save:hover { background: var(--bg-gray); border-color: #cbd5e0; transform: translateY(-1px); }
 
-        /* 已移除云端备份按钮，仅保留状态显示 */
-        
         .btn-finish { background: var(--info-color); color: white; box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3); margin-left: auto; }
         .btn-finish:hover { background: #3182ce; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(66, 153, 225, 0.4); }
 
@@ -162,8 +160,28 @@
         .btn-pause:hover:not(:disabled) { background: #dd6b20; transform: translateY(-1px); }
         .btn-stop { background: var(--danger-color); color: white; box-shadow: 0 2px 5px rgba(245, 101, 101, 0.3); }
         .btn-stop:hover:not(:disabled) { background: #e53e3e; transform: translateY(-1px); }
+        
+        /* 删除按钮 */
         .btn-delete { background: #fff; color: var(--danger-color); border: 1px solid rgba(245, 101, 101, 0.2); padding: 6px 12px; font-size: 13px; }
-        .btn-delete:hover { background: #fff5f5; border-color: var(--danger-color); }
+        .btn-delete:hover { background: #fff5f5; border-color: var(--danger-color); transform: translateY(-1px); }
+        
+        /* 新增：次级操作按钮（用于编辑、复盘）- 统一风格 */
+        .btn-secondary-outline {
+            background: white;
+            color: var(--text-sub);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            font-size: 13px;
+            box-shadow: none;
+        }
+        .btn-secondary-outline:hover {
+            background: #fff;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.15);
+        }
+
         .btn-add-todo, .btn-add-question { background: var(--secondary-color); color: white; box-shadow: 0 2px 5px rgba(118, 75, 162, 0.3); }
         .btn-add-todo:hover, .btn-add-question:hover { background: #6b46c1; transform: translateY(-1px); }
         .btn-add-plan { background: var(--plan-color); color: white; box-shadow: 0 2px 5px rgba(74, 144, 226, 0.3); }
@@ -404,7 +422,6 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // 注意：不再调用 startAutoSave()
             refreshAllUI();
             updateSystemTime();
             setInterval(updateSystemTime, 1000);
@@ -666,7 +683,7 @@
                 <div class="todo-item ${t.completed?'completed':''}">
                     <div class="todo-header"><input type="checkbox" class="todo-checkbox" ${t.completed?'checked':''} onchange="toggleTodo(${t.id})">
                     <div class="todo-content"><div class="todo-text">${t.text}</div>${t.subtitle?`<div class="todo-subtitle">${t.subtitle}</div>`:''}${t.deadline?`<div class="todo-deadline">${t.deadline}</div>`:''}</div></div>
-                    <button class="btn-small btn-start" onclick="openTodoEditModal(${t.id})" style="background:#eee;color:#666">编辑</button>
+                    <button class="btn-small btn-secondary-outline" onclick="openTodoEditModal(${t.id})">编辑</button>
                 </div>`).join('');
         }
         function openTodoEditModal(id) { currentTodoId = id; const t = window.todos.find(x=>x.id===id); if(t){ document.getElementById('editTodoText').value=t.text; document.getElementById('editTodoSubtitle').value=t.subtitle||''; document.getElementById('editTodoDeadline').value=t.deadline||''; document.getElementById('todoEditModal').style.display='block'; }}
@@ -691,7 +708,7 @@
                 <div class="record-item">
                     <div class="record-header"><div><div class="record-task">${r.task}</div></div><div class="record-time">${formatDuration(r.duration)}</div></div>
                     ${r.description?`<div class="record-desc">${r.description}</div>`:''}
-                    <div style="margin-top:10px"><button class="btn-small" onclick="openDescModal(${window.records.length-1-i})" style="background:#eee;color:#666">${r.description?'编辑':'添加'}复盘</button></div>
+                    <div style="margin-top:10px"><button class="btn-small btn-secondary-outline" onclick="openDescModal(${window.records.length-1-i})">${r.description?'编辑':'添加'}复盘</button></div>
                 </div>`).join('');
         }
         function openDescModal(idx) { currentRecordIndex=idx; document.getElementById('modalRecordTask').textContent=window.records[idx].task; document.getElementById('descInput').value=window.records[idx].description||''; document.getElementById('descModal').style.display='block'; }
