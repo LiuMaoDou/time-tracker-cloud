@@ -116,8 +116,21 @@
         }
 
         /* 修改：今日结束按钮样式 */
-        .btn-finish { background: var(--danger-color); color: white; box-shadow: 0 2px 4px rgba(245, 101, 101, 0.3); margin-left: auto; }
-        .btn-finish:hover { background: #c53030; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(245, 101, 101, 0.4); }
+
+		.btn-finish { 
+			background: #fef2f2; /* 浅红色背景 */
+			color: #dc2626; /* 深红色文字 */
+			box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15); 
+			margin-left: auto; 
+			border: 1px solid #fecaca; /* 添加浅红色边框 */
+		}
+
+		.btn-finish:hover { 
+			background: #fee2e2; /* 悬停时稍深一点 */
+			color: #b91c1c; /* 悬停时文字更深 */
+			transform: translateY(-1px); 
+			box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2); 
+		}
 
         .clock-display {
             font-family: 'Ubuntu', monospace;
@@ -349,7 +362,7 @@
             
             <button class="btn-local-save" onclick="handleLocalBackupClick()">💾 本地备份</button>
             
-            <button class="btn-finish" onclick="finishToday()">💰 今日结束</button>
+            <button class="btn-finish" onclick="finishToday()">🎉 今日结束</button>
             
             <div id="sysClock" class="clock-display">00:00:00</div>
 
