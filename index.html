@@ -190,6 +190,24 @@
         .btn-delete { background: #fff; color: var(--danger-color); border: 1px solid rgba(245, 101, 101, 0.2); padding: 6px 12px; font-size: 13px; }
         .btn-delete:hover { background: #fff5f5; border-color: var(--danger-color); transform: translateY(-1px); }
         
+        /* -------------------------
+           新增：Flomo 按钮样式 
+           ------------------------- */
+        .btn-flomo { 
+            background: #fff; 
+            color: var(--success-color);
+            border: 1px solid rgba(72, 187, 120, 0.2); 
+            padding: 6px 12px; 
+            font-size: 13px; 
+            margin-right: 8px; 
+        }
+        .btn-flomo:hover { 
+            background: #f0fff4; 
+            border-color: var(--success-color); 
+            transform: translateY(-1px); 
+            box-shadow: 0 2px 4px rgba(72, 187, 120, 0.15);
+        }
+        
         /* 待办编辑按钮 */
         .btn-edit-outline {
             background: white;
@@ -831,11 +849,58 @@
         function saveTodoEdit() { const t = window.todos.find(x=>x.id===currentTodoId); if(t){ t.text=document.getElementById('editTodoText').value; t.subtitle=document.getElementById('editTodoSubtitle').value; t.deadline=document.getElementById('editTodoDeadline').value; updateTodoList(); closeTodoEditModal(); triggerSync(); }}
 
         function addQuestion() { const v = document.getElementById('questionInput').value.trim(); if(!v)return alert('请输入内容'); window.questions.push({id:Date.now(), question:v, answer:'', answered:false}); document.getElementById('questionInput').value=''; updateQuestionList(); triggerSync(); }
+
+        /* -------------------------
+           修改：增加 Flomo 按钮的列表渲染
+           ------------------------- */
         function updateQuestionList() {
             const list = document.getElementById('questionList');
-            if(window.questions.length===0) return list.innerHTML = '<div class="no-records">暂无灵感</div>';
-            list.innerHTML = window.questions.map(q => `<div class="question-item ${q.answered?'answered':''}"><div class="question-content" onclick="openAnswerModal(${q.id})"><div class="question-text">${q.question}</div></div><button class="btn-small btn-delete" onclick="deleteQuestion(${q.id})">删除</button></div>`).join('');
+            if(window.questions.length === 0) return list.innerHTML = '<div class="no-records">暂无灵感</div>';
+            
+            list.innerHTML = window.questions.map(q => `
+                <div class="question-item ${q.answered ? 'answered' : ''}">
+                    <div class="question-content" onclick="openAnswerModal(${q.id})">
+                        <div class="question-text">${q.question}</div>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <button class="btn-small btn-flomo" onclick="sendToFlomo(event, ${q.id})">Flomo</button>
+                        <button class="btn-small btn-delete" onclick="deleteQuestion(${q.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
         }
+
+        /* -------------------------
+           新增：发送到 Flomo 的功能函数
+           ------------------------- */
+        window.sendToFlomo = function(event, id) {
+            if(event) event.stopPropagation();
+
+            const q = window.questions.find(x => x.id === id);
+            if (!q) return;
+
+            const contentToSend = `#灵感洞察\n\n💡 灵感：\n${q.question}\n\n📝 思考/方案：\n${q.answer || '（暂无深度思考）'}`;
+            const webhookUrl = "https://flomoapp.com/iwh/MjMyNTE1/896a528a72e341a87584f81234f5d2eb/";
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: contentToSend })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("✅ 已成功发送到 Flomo！");
+                } else {
+                    alert("❌ 发送失败，请检查网络或 API 地址。");
+                    console.error("Flomo Error:", response);
+                }
+            })
+            .catch(error => {
+                alert("❌ 发送出错：" + error.message);
+                console.error("Flomo Fetch Error:", error);
+            });
+        }
+
         function deleteQuestion(id) { if(confirm('删除?')) { window.questions=window.questions.filter(q=>q.id!==id); updateQuestionList(); triggerSync(); } }
         function openAnswerModal(id) { currentQuestionId=id; const q=window.questions.find(x=>x.id===id); if(q){ document.getElementById('modalQuestionText').textContent=q.question; document.getElementById('answerInput').value=q.answer||''; document.getElementById('answerModal').style.display='block'; }}
         function closeAnswerModal() { document.getElementById('answerModal').style.display='none'; currentQuestionId=null; }
