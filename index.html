@@ -208,7 +208,7 @@
             box-shadow: 0 2px 4px rgba(72, 187, 120, 0.15);
         }
         
-        /* 待办编辑按钮 */
+        /* 待办编辑按钮 - 已移除，样式保留以防复用 */
         .btn-edit-outline {
             background: white;
             color: var(--info-color);
@@ -834,14 +834,21 @@
                 if(t.completed) setTimeout(() => { window.todos = window.todos.filter(x => x.id !== id); updateTodoList(); triggerSync(); }, 500);
             } 
         }
+
+        // 修改：去掉了单独的编辑按钮，改为点击内容区域编辑
         function updateTodoList() {
             const list = document.getElementById('todoList');
             if(window.todos.length===0) return list.innerHTML = '<div class="no-records">暂无待办</div>';
             list.innerHTML = window.todos.map(t => `
                 <div class="todo-item ${t.completed?'completed':''}">
-                    <div class="todo-header"><input type="checkbox" class="todo-checkbox" ${t.completed?'checked':''} onchange="toggleTodo(${t.id})">
-                    <div class="todo-content"><div class="todo-text">${t.text}</div>${t.subtitle?`<div class="todo-subtitle">${t.subtitle}</div>`:''}${t.deadline?`<div class="todo-deadline">${t.deadline}</div>`:''}</div></div>
-                    <button class="btn-small btn-edit-outline" onclick="openTodoEditModal(${t.id})">编辑</button>
+                    <div class="todo-header">
+                        <input type="checkbox" class="todo-checkbox" ${t.completed?'checked':''} onchange="toggleTodo(${t.id})">
+                        <div class="todo-content" onclick="openTodoEditModal(${t.id})" style="cursor: pointer; flex: 1;">
+                            <div class="todo-text">${t.text}</div>
+                            ${t.subtitle?`<div class="todo-subtitle">${t.subtitle}</div>`:''}
+                            ${t.deadline?`<div class="todo-deadline">${t.deadline}</div>`:''}
+                        </div>
+                    </div>
                 </div>`).join('');
         }
         function openTodoEditModal(id) { currentTodoId = id; const t = window.todos.find(x=>x.id===id); if(t){ document.getElementById('editTodoText').value=t.text; document.getElementById('editTodoSubtitle').value=t.subtitle||''; document.getElementById('editTodoDeadline').value=t.deadline||''; document.getElementById('todoEditModal').style.display='block'; }}
@@ -906,6 +913,7 @@
         function closeAnswerModal() { document.getElementById('answerModal').style.display='none'; currentQuestionId=null; }
         function saveAnswer() { const q=window.questions.find(x=>x.id===currentQuestionId); if(q){ q.answer=document.getElementById('answerInput').value; q.answered=!!q.answer; updateQuestionList(); closeAnswerModal(); triggerSync(); }}
 
+        // 修改：去掉了单独的复盘按钮，改为点击整个条目编辑
         function updateRecordsList() {
             const list = document.getElementById('recordsList');
             if(window.records.length===0) return list.innerHTML = '<div class="no-records">无记录</div>';
@@ -921,7 +929,7 @@
                 } catch (e) { console.error(e); }
 
                 return `
-                <div class="record-item">
+                <div class="record-item" onclick="openDescModal(${window.records.length-1-i})" style="cursor: pointer;">
                     <div class="record-header">
                         <div>
                             <div class="record-task">${r.task}</div>
@@ -930,7 +938,6 @@
                         <div class="record-time">${formatDuration(r.duration)}</div>
                     </div>
                     ${r.description?`<div class="record-desc">${r.description}</div>`:''}
-                    <div style="margin-top:10px"><button class="btn-small btn-review-outline" onclick="openDescModal(${window.records.length-1-i})">${r.description?'编辑':'添加'}复盘</button></div>
                 </div>`;
             }).join('');
         }
