@@ -45,6 +45,12 @@
             --btn-review-border: #d6bcfa;
             --btn-review-hover: #e9d8fd;
 
+            /* 新增：健身按钮颜色 (青色系) */
+            --btn-fitness-bg: #e6fffa;
+            --btn-fitness-text: #2c7a7b;
+            --btn-fitness-border: #81e6d9;
+            --btn-fitness-hover: #b2f5ea;
+
             --btn-flomo-bg: #ffffff;
             --btn-flomo-hover: #f0fff4;
 
@@ -89,6 +95,12 @@
             --btn-review-border: #553C9A;
             --btn-review-hover: rgba(118, 75, 162, 0.25);
             
+            /* 新增：健身按钮颜色适配 (深青色半透明) */
+            --btn-fitness-bg: rgba(56, 178, 172, 0.15);
+            --btn-fitness-text: #81e6d9;
+            --btn-fitness-border: #285e61;
+            --btn-fitness-hover: rgba(56, 178, 172, 0.25);
+
             --btn-flomo-bg: #283240;
             --btn-flomo-hover: rgba(72, 187, 120, 0.15);
 
@@ -212,13 +224,28 @@
             color: var(--btn-review-text); 
             border: 1px solid var(--btn-review-border); 
             box-shadow: 0 2px 4px rgba(118, 75, 162, 0.15);
-            margin-left: auto;
+            margin-left: auto; /* 靠右对齐 */
         }
 
         .btn-daily-review:hover {
             background: var(--btn-review-hover);
             transform: translateY(-1px);
             box-shadow: 0 4px 6px rgba(118, 75, 162, 0.2);
+        }
+
+        /* 新增：健身按钮样式 */
+        .btn-fitness {
+            background: var(--btn-fitness-bg); 
+            color: var(--btn-fitness-text); 
+            border: 1px solid var(--btn-fitness-border); 
+            box-shadow: 0 2px 4px rgba(56, 178, 172, 0.15);
+            margin-left: 10px; /* 紧跟在复盘按钮右边 */
+        }
+
+        .btn-fitness:hover {
+            background: var(--btn-fitness-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(56, 178, 172, 0.2);
         }
 
 		.btn-finish { 
@@ -482,7 +509,6 @@
             align-items: center;
             opacity: 0.9;
         }
-        /* 深色模式下标题颜色微调 */
         [data-theme="dark"] .todo-group-title {
             color: #A5B4FC; 
         }
@@ -550,7 +576,7 @@
             .file-controls { flex-direction: column; align-items: stretch; } 
             
             /* 移动端适配 */
-            .file-controls .btn-finish, .file-controls .btn-daily-review, .file-controls .btn-theme { margin-left: 0; margin-top: 10px; } 
+            .file-controls .btn-finish, .file-controls .btn-daily-review, .file-controls .btn-theme, .file-controls .btn-fitness { margin-left: 0; margin-top: 10px; } 
             .clock-display { margin-left: 0; margin-top: 10px; justify-content: center; } 
             .auto-save-status { justify-content: center; margin-top: 10px; margin-left: 0; } 
         }
@@ -575,6 +601,8 @@
             
             <button class="btn-daily-review" onclick="openDailyReviewModal()">📅 今日复盘</button>
             
+            <button class="btn-fitness" onclick="window.open('https://liumaodou.xyz/vigor-tracker/', '_blank')">💪 健身运动</button>
+
             <button class="btn-finish" onclick="finishToday()">🎉 今日结束</button>
             
             <div id="sysClock" class="clock-display">00:00:00</div>
@@ -626,10 +654,8 @@
                 <div class="todo-section">
                     <h2 class="section-title">📝 待办清单</h2>
                     <div class="todo-input-section">
-                        <div style="display: flex; gap: 8px;">
-                            <input type="text" id="todoProjectInput" placeholder="项目 (如:工作)..." style="flex: 0 0 110px;">
-                            <input type="text" id="todoInput" placeholder="输入待办事项..." style="flex: 1;">
-                        </div>
+                        <input type="text" id="todoInput" placeholder="输入待办事项...">
+                        <input type="text" id="todoProjectInput" placeholder="所属项目 (如:工作)...">
                         <input type="text" id="todoSubtitleInput" placeholder="补充描述（可选）...">
                         <input type="date" id="todoDeadline">
                         <button class="btn-add-todo" onclick="addTodo()">添加任务</button>
@@ -655,8 +681,8 @@
         <div class="modal-content">
             <div class="modal-header"><h2>✏️ 编辑待办</h2><span class="close" onclick="closeTodoEditModal()">&times;</span></div>
             <div class="modal-body">
-                <label>所属项目：</label><input type="text" id="editTodoProject" placeholder="例如：工作、生活、学习">
                 <label>待办内容：</label><input type="text" id="editTodoText">
+                <label>所属项目：</label><input type="text" id="editTodoProject" placeholder="例如：工作、生活、学习">
                 <label>补充描述：</label><input type="text" id="editTodoSubtitle">
                 <label>截止日期：</label><input type="date" id="editTodoDeadline">
             </div>
