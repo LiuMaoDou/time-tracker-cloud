@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务时间记录系统 - Cloud Pro (结算升级版)</title>
+    <title>任务时间记录系统 - Cloud Pro (Supabase 最终版)</title>
     
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     
@@ -13,7 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
-            /* 核心配色变量 */
+            /* 核心配色变量 - 浅色模式 (默认) */
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --primary-color: #667eea;
             --secondary-color: #764ba2;
@@ -23,17 +23,72 @@
             --info-color: #4299e1;
             --plan-color: #4a90e2; 
             --backup-color: #4a5568; 
+            
             --text-main: #2d3748;
             --text-sub: #718096;
-            --bg-gray: #f7fafc;
             --border-color: #e2e8f0;
+
+            /* 背景色语义变量 */
+            --bg-container: rgba(255, 255, 255, 0.95);
+            --bg-card: #ffffff;
+            --bg-section: #f7fafc; /* 原来的 bg-gray */
+            --bg-input: #ffffff;
+            --bg-hover: #f7fafc;
+            --bg-sub-area: #fafafa;
+            
+            /* 按钮特定背景色适配 */
+            --btn-finish-bg: #fef2f2;
+            --btn-finish-text: #dc2626;
+            --btn-finish-border: #fecaca;
+            --btn-finish-hover: #fee2e2;
+            
+            --btn-review-bg: #f3ebff;
+            --btn-review-text: #764ba2;
+            --btn-review-border: #d6bcfa;
+            --btn-review-hover: #e9d8fd;
+
+            --btn-flomo-bg: var(--bg-card);
+            --btn-flomo-hover: #f0fff4;
+
             --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --radius-md: 12px;
             --radius-sm: 8px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+        /* 深色模式变量覆盖 */
+        [data-theme="dark"] {
+            --primary-gradient: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            --text-main: #edf2f7;
+            --text-sub: #cbd5e0;
+            --border-color: #4a5568;
+            
+            --bg-container: rgba(26, 32, 44, 0.95); /* 深色容器 */
+            --bg-card: #2d3748; /* 深色卡片 */
+            --bg-section: #171923; /* 深色输入区背景 */
+            --bg-input: #4a5568; /* 输入框背景 */
+            --bg-hover: #4a5568;
+            --bg-sub-area: #1a202c;
+
+            /* 调整深色模式下的按钮颜色，使其柔和不刺眼 */
+            --btn-finish-bg: rgba(220, 38, 38, 0.2);
+            --btn-finish-text: #fc8181;
+            --btn-finish-border: #742a2a;
+            --btn-finish-hover: rgba(220, 38, 38, 0.3);
+
+            --btn-review-bg: rgba(118, 75, 162, 0.2);
+            --btn-review-text: #d6bcfa;
+            --btn-review-border: #553c9a;
+            --btn-review-hover: rgba(118, 75, 162, 0.3);
+            
+            --btn-flomo-bg: #2d3748;
+            --btn-flomo-hover: rgba(72, 187, 120, 0.2);
+
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
         body {
             font-family: 'Ubuntu', 'Microsoft YaHei', '微软雅黑', sans-serif;
             background: var(--primary-gradient);
@@ -51,7 +106,7 @@
         .container {
             max-width: 1600px; 
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--bg-container); /* 使用变量 */
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -67,6 +122,13 @@
             background: var(--primary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            /* 深色模式下标题渐变可能不明显，增加一个兜底色 */
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        [data-theme="dark"] h1 {
+            background: linear-gradient(135deg, #a3bffa 0%, #d6bcfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .main-layout { display: flex; gap: 20px; }
@@ -80,7 +142,7 @@
             gap: 15px;
             margin-bottom: 30px;
             padding: 20px;
-            background: #fff;
+            background: var(--bg-card); /* 使用变量 */
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             align-items: center;
@@ -118,19 +180,40 @@
             filter: brightness(1.1); 
         }
 
-        /* 修改：今日结束按钮样式 */
+        .btn-theme {
+            background: var(--bg-section);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        .btn-theme:hover {
+            background: var(--bg-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-daily-review {
+            background: var(--btn-review-bg); 
+            color: var(--btn-review-text); 
+            border: 1px solid var(--btn-review-border); 
+            box-shadow: 0 2px 4px rgba(118, 75, 162, 0.15);
+            margin-left: auto;
+        }
+
+        .btn-daily-review:hover {
+            background: var(--btn-review-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(118, 75, 162, 0.2);
+        }
 
 		.btn-finish { 
-			background: #fef2f2; /* 浅红色背景 */
-			color: #dc2626; /* 深红色文字 */
+			background: var(--btn-finish-bg); 
+			color: var(--btn-finish-text); 
 			box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15); 
-			margin-left: auto; 
-			border: 1px solid #fecaca; /* 添加浅红色边框 */
+            margin-left: 10px; 
+            border: 1px solid var(--btn-finish-border); 
 		}
 
 		.btn-finish:hover { 
-			background: #fee2e2; /* 悬停时稍深一点 */
-			color: #b91c1c; /* 悬停时文字更深 */
+			background: var(--btn-finish-hover); 
 			transform: translateY(-1px); 
 			box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2); 
 		}
@@ -140,7 +223,7 @@
             font-size: 22px;
             font-weight: 700;
             color: var(--text-main);
-            background: var(--bg-gray);
+            background: var(--bg-section); /* 使用变量 */
             padding: 5px 15px;
             border-radius: var(--radius-sm);
             margin-left: 15px;
@@ -172,8 +255,17 @@
             transition: background 0.3s;
         }
 
-        /* 统一输入框样式 */
-        input[type="text"], input[type="date"], textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 15px; transition: all 0.2s; background: #fff; color: var(--text-main); font-family: inherit; }
+        input[type="text"], input[type="date"], textarea { 
+            width: 100%; 
+            padding: 12px 16px; 
+            border: 1px solid var(--border-color); 
+            border-radius: var(--radius-sm); 
+            font-size: 15px; 
+            transition: all 0.2s; 
+            background: var(--bg-input); /* 使用变量 */
+            color: var(--text-main); 
+            font-family: inherit; 
+        }
         input[type="text"]:focus, input[type="date"]:focus, textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); }
         
         button { padding: 10px 20px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; font-family: inherit; }
@@ -187,76 +279,68 @@
         .btn-stop { background: var(--danger-color); color: white; box-shadow: 0 2px 5px rgba(245, 101, 101, 0.3); }
         .btn-stop:hover:not(:disabled) { background: #e53e3e; transform: translateY(-1px); }
         
-        .btn-delete { background: #fff; color: var(--danger-color); border: 1px solid rgba(245, 101, 101, 0.2); padding: 6px 12px; font-size: 13px; }
-        .btn-delete:hover { background: #fff5f5; border-color: var(--danger-color); transform: translateY(-1px); }
+        .btn-delete { background: var(--bg-card); color: var(--danger-color); border: 1px solid rgba(245, 101, 101, 0.2); padding: 6px 12px; font-size: 13px; }
+        .btn-delete:hover { background: var(--bg-finish-bg); border-color: var(--danger-color); transform: translateY(-1px); }
         
-        /* -------------------------
-           新增：Flomo 按钮样式 
-           ------------------------- */
         .btn-flomo { 
-            background: #fff; 
+            background: var(--btn-flomo-bg); /* 使用变量 */
             color: var(--success-color);
             border: 1px solid rgba(72, 187, 120, 0.2); 
             padding: 6px 12px; 
             font-size: 13px; 
-            margin-right: 8px; 
         }
         .btn-flomo:hover { 
-            background: #f0fff4; 
+            background: var(--btn-flomo-hover); 
             border-color: var(--success-color); 
             transform: translateY(-1px); 
             box-shadow: 0 2px 4px rgba(72, 187, 120, 0.15);
         }
         
-        /* 待办编辑按钮 - 已移除，样式保留以防复用 */
-        .btn-edit-outline {
-            background: white;
-            color: var(--info-color);
-            border: 1px solid var(--info-color);
-            padding: 6px 12px;
-            font-size: 13px;
-            box-shadow: none;
-        }
-        .btn-edit-outline:hover {
-            background: #ebf8ff; 
-            color: var(--info-color); 
-            border-color: var(--info-color); 
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(66, 153, 225, 0.15);
-        }
-
-        /* 复盘按钮 */
-        .btn-review-outline {
-            background: white;
-            color: var(--warning-color);
-            border: 1px solid var(--warning-color);
-            padding: 6px 12px;
-            font-size: 13px;
-            box-shadow: none;
-        }
-        .btn-review-outline:hover {
-            background: #fffaf0; 
-            color: var(--warning-color); 
-            border-color: var(--warning-color); 
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(237, 137, 54, 0.15);
-        }
-
         .btn-add-todo, .btn-add-question { background: var(--secondary-color); color: white; box-shadow: 0 2px 5px rgba(118, 75, 162, 0.3); }
         .btn-add-todo:hover, .btn-add-question:hover { background: #6b46c1; transform: translateY(-1px); }
         .btn-add-plan { background: var(--plan-color); color: white; box-shadow: 0 2px 5px rgba(74, 144, 226, 0.3); }
         .btn-add-plan:hover { background: #357abd; transform: translateY(-1px); }
-        .btn-save-modal { background: white; color: var(--text-main); border: 1px solid var(--border-color); }
-        .btn-save-modal:hover { background: var(--bg-gray); border-color: #cbd5e0; }
+        
+        .btn-save-modal { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-save-modal:hover { background: var(--bg-section); border-color: #cbd5e0; }
         .btn-small { padding: 6px 12px; font-size: 13px; }
 
-        /* 输入框区域样式 */
+        .plan-reorder {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-right: 8px;
+            gap: 4px;
+        }
+        .btn-move {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-section);
+            color: var(--text-sub);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+            box-shadow: none;
+            line-height: 1;
+        }
+        .btn-move:hover {
+            background: var(--plan-color);
+            color: white;
+            transform: translateY(-1px);
+        }
+
         .task-input-section, .todo-input-section, .question-input-section, .plan-input-section { 
             display: flex; 
             flex-direction: column; 
             gap: 12px; 
             margin-bottom: 25px; 
-            background: var(--bg-gray); 
+            background: var(--bg-section); /* 使用变量 */
             padding: 15px; 
             border-radius: var(--radius-sm); 
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.02); 
@@ -266,15 +350,14 @@
         .task-buttons-row { display: flex; gap: 10px; width: 100%; }
         .task-buttons-row button { flex: 1; }
 
-        .current-task { background: #fff; padding: 25px; border-radius: var(--radius-md); margin-bottom: 25px; border: 1px solid var(--border-color); text-align: center; box-shadow: var(--shadow-sm); }
+        .current-task { background: var(--bg-card); padding: 25px; border-radius: var(--radius-md); margin-bottom: 25px; border: 1px solid var(--border-color); text-align: center; box-shadow: var(--shadow-sm); }
         .current-task h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-sub); margin-bottom: 10px; }
         #currentTaskName { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 10px; }
         .timer { font-size: 48px; font-weight: 700; color: var(--primary-color); font-variant-numeric: tabular-nums; text-shadow: 0 2px 4px rgba(102, 126, 234, 0.2); }
 
-        /* 四大主题框样式 */
         .records, .todo-section, .question-section, .plan-section { 
             margin-bottom: 20px; 
-            background: #fff; 
+            background: var(--bg-card); /* 使用变量 */
             padding: 25px; 
             border-radius: var(--radius-md); 
             border: 1px solid var(--border-color); 
@@ -287,54 +370,86 @@
         #recordsList, #todoList, #questionList, #planList { flex: 1; overflow-y: auto; padding-right: 5px; }
         .section-title { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
 
-        .record-item, .todo-item, .question-item, .plan-item { background: white; padding: 16px; border-radius: var(--radius-sm); margin-bottom: 12px; border: 1px solid var(--border-color); transition: all 0.25s ease; position: relative; }
-        .record-item:hover, .todo-item:hover, .question-item:hover, .plan-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: #cbd5e0; }
+        .question-item { 
+            background: var(--bg-card); 
+            padding: 16px; 
+            border-radius: var(--radius-sm); 
+            margin-bottom: 12px; 
+            border: 1px solid var(--border-color); 
+            transition: all 0.25s ease; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px;
+        }
+        
+        .question-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: #cbd5e0; }
+        .question-item.answered { border-left: 4px solid var(--success-color); }
+        
+        .question-content { 
+            width: 100%; 
+            cursor: pointer; 
+        }
+        
+        .question-text { 
+            font-weight: 500; 
+            font-size: 15px; 
+            line-height: 1.6;
+        }
+        
+        .question-actions {
+            display: flex;
+            width: 100%;
+            justify-content: flex-end; 
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border-color); 
+        }
+        
+        .record-item, .todo-item, .plan-item { background: var(--bg-card); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 12px; border: 1px solid var(--border-color); transition: all 0.25s ease; position: relative; }
+        .record-item:hover, .todo-item:hover, .plan-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: #cbd5e0; }
 
         .record-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .record-task { font-weight: 700; font-size: 16px; color: var(--text-main); }
         .record-time { color: var(--primary-color); font-weight: 700; font-family: 'Ubuntu', sans-serif; font-size: 14px; }
-        .record-desc { font-size: 14px; color: var(--text-sub); margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color); background: #fafafa; padding: 10px; border-radius: 6px; }
+        .record-desc { font-size: 14px; color: var(--text-sub); margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border-color); background: var(--bg-sub-area); padding: 10px; border-radius: 6px; }
 
-        .todo-item { display: flex; align-items: center; justify-content: space-between; }
-        .todo-item.completed { opacity: 0.6; background: #f9f9f9; }
+        .todo-item { display: flex; flex-direction: column; gap: 8px; }
+        .todo-item.completed { opacity: 0.6; background: var(--bg-section); }
         .todo-item.overdue { border-left: 4px solid var(--danger-color); }
-        .todo-header { display: flex; align-items: flex-start; gap: 12px; flex: 1; margin-right: 15px; }
-        .todo-checkbox { width: 20px; height: 20px; margin-top: 3px; cursor: pointer; border-radius: 4px; border: 2px solid #cbd5e0; }
+        .todo-header { display: flex; align-items: flex-start; gap: 12px; width: 100%; }
+        .todo-checkbox { width: 20px; height: 20px; margin-top: 3px; cursor: pointer; border-radius: 4px; border: 2px solid #cbd5e0; flex-shrink: 0;}
         .todo-text { font-weight: 700; color: var(--text-main); font-size: 15px; }
         .todo-subtitle { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
         .todo-deadline { font-size: 12px; color: var(--warning-color); margin-top: 4px; font-weight: 600; background: rgba(237, 137, 54, 0.1); display: inline-block; padding: 2px 6px; border-radius: 4px; }
 
-        .plan-item { display: flex; flex-direction: column; gap: 10px; }
-        .plan-item.completed { opacity: 0.6; background: #f9f9f9; text-decoration: line-through; }
+        .plan-item { display: flex; gap: 10px; align-items: flex-start; }
+        .plan-item.completed { opacity: 0.6; background: var(--bg-section); }
+        .plan-item.completed .plan-content { text-decoration: line-through; }
+        .plan-main { flex: 1; display: flex; flex-direction: column; gap: 6px; }
         .plan-content { font-weight: 700; color: var(--text-main); font-size: 15px; }
-        .plan-deadline { font-size: 12px; color: var(--plan-color); background: rgba(74, 144, 226, 0.1); display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-top: 4px; }
-        .plan-actions { display: flex; gap: 8px; margin-top: 5px; }
-        .btn-plan-action { flex: 1; font-size: 12px; padding: 6px; box-shadow: none; border: 1px solid var(--border-color); }
-        .btn-to-footprint { background: white; color: var(--success-color); border-color: var(--success-color); }
-        .btn-to-footprint:hover { background: #f0fff4; }
-        .btn-to-todo { background: white; color: var(--secondary-color); border-color: var(--secondary-color); }
-        .btn-to-todo:hover { background: #f3ebff; }
-
-        .question-item { display: flex; justify-content: space-between; align-items: center; }
-        .question-item.answered { border-left: 4px solid var(--success-color); }
-        .question-content { flex: 1; margin-right: 15px; cursor: pointer; }
-        .question-text { font-weight: 500; font-size: 15px; }
-        .question-status { font-size: 12px; color: var(--success-color); margin-top: 4px; display: block; font-weight: 600; }
-
+        .plan-deadline { font-size: 12px; color: var(--plan-color); background: rgba(74, 144, 226, 0.1); display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: 600; width: fit-content; }
+        .plan-actions { display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+        .btn-plan-action { font-size: 12px; padding: 6px 10px; box-shadow: none; border: 1px solid var(--border-color); flex: 1; }
+        .btn-to-footprint { background: var(--bg-card); color: var(--success-color); border-color: var(--success-color); }
+        .btn-to-footprint:hover { background: var(--btn-flomo-hover); }
+        .btn-to-todo { background: var(--bg-card); color: var(--secondary-color); border-color: var(--secondary-color); }
+        .btn-to-todo:hover { background: var(--btn-review-bg); }
+        
         .no-records { text-align: center; color: var(--text-sub); padding: 30px; font-style: italic; background: rgba(0,0,0,0.02); border-radius: var(--radius-sm); }
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-content { background-color: white; margin: 5% auto; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: none; padding: 35px; width: 90%; max-width: 600px; position: relative; animation: slideDown 0.3s; }
+        .modal-content { background-color: var(--bg-card); margin: 5% auto; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: none; padding: 35px; width: 90%; max-width: 600px; position: relative; animation: slideDown 0.3s; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .modal-header h2 { font-size: 20px; font-weight: 700; margin: 0; color: var(--text-main); }
-        .close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
+        .close { color: var(--text-sub); font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
         .close:hover { color: var(--text-main); }
         .modal-body { margin-bottom: 25px; }
         .modal-body label { display: block; color: var(--text-main); font-size: 14px; font-weight: 600; margin-bottom: 8px; margin-top: 15px; }
         .modal-body label:first-child { margin-top: 0; }
-        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
 
         /* 加载遮罩层样式 */
         #loadingOverlay {
@@ -343,7 +458,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--bg-container);
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -365,7 +480,16 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 1200px) { .main-layout { flex-wrap: wrap; } .left-section, .plan-section-container, .middle-section, .right-section { flex: 1 1 45%; } }
-        @media (max-width: 768px) { .main-layout { flex-direction: column; } .container { padding: 20px; } .file-controls { flex-direction: column; align-items: stretch; } .file-controls .btn-finish { margin-left: 0; margin-top: 10px; } .clock-display { margin-left: 0; margin-top: 10px; justify-content: center; } .auto-save-status { justify-content: center; margin-top: 10px; margin-left: 0; } }
+        @media (max-width: 768px) { 
+            .main-layout { flex-direction: column; } 
+            .container { padding: 20px; } 
+            .file-controls { flex-direction: column; align-items: stretch; } 
+            
+            /* 移动端适配 */
+            .file-controls .btn-finish, .file-controls .btn-daily-review, .file-controls .btn-theme { margin-left: 0; margin-top: 10px; } 
+            .clock-display { margin-left: 0; margin-top: 10px; justify-content: center; } 
+            .auto-save-status { justify-content: center; margin-top: 10px; margin-left: 0; } 
+        }
     </style>
 </head>
 <body>
@@ -382,6 +506,10 @@
             <input type="file" id="fileInput" accept=".json" onchange="loadFromFile(event)">
             
             <button class="btn-local-save" onclick="handleLocalBackupClick()">💾 本地备份</button>
+
+            <button class="btn-theme" onclick="toggleTheme()">🌓 切换主题</button>
+            
+            <button class="btn-daily-review" onclick="openDailyReviewModal()">📅 今日复盘</button>
             
             <button class="btn-finish" onclick="finishToday()">🎉 今日结束</button>
             
@@ -409,6 +537,7 @@
                         <h2>正在进行</h2>
                         <div id="currentTaskName"></div>
                         <div class="timer" id="timer">00:00:00</div>
+                        <textarea id="currentTaskDescInput" placeholder="在此记录任务备注、灵感或进展..." style="margin-top: 15px; height: 80px; font-size: 14px; resize: vertical;" oninput="updateCurrentDesc(this.value)"></textarea>
                     </div>
                     <div id="recordsList"><div class="no-records">今天还没有开始记录，加油！</div></div>
                 </div>
@@ -467,7 +596,7 @@
         <div class="modal-content">
             <div class="modal-header"><h2>💡 深度思考</h2><span class="close" onclick="closeAnswerModal()">&times;</span></div>
             <div class="modal-body">
-                <label>原始内容：</label><p id="modalQuestionText" style="margin-bottom: 20px; color: var(--text-main); font-weight: 500; font-size: 16px; padding: 10px; background: var(--bg-gray); border-radius: 8px;"></p>
+                <label>原始内容：</label><p id="modalQuestionText" style="margin-bottom: 20px; color: var(--text-main); font-weight: 500; font-size: 16px; padding: 10px; background: var(--bg-section); border-radius: 8px;"></p>
                 <label>洞察/解决方案：</label><textarea id="answerInput" placeholder="在这里深化您的思考..."></textarea>
             </div>
             <div class="modal-footer"><button class="btn-save-modal" onclick="closeAnswerModal()">取消</button><button class="btn-start" onclick="saveAnswer()">保存记录</button></div>
@@ -478,10 +607,42 @@
         <div class="modal-content">
             <div class="modal-header"><h2>📝 任务复盘</h2><span class="close" onclick="closeDescModal()">&times;</span></div>
             <div class="modal-body">
-                <label>任务名称：</label><p id="modalRecordTask" style="margin-bottom: 20px; font-weight: 600; font-size: 16px;"></p>
+                <label>任务名称：</label><p id="modalRecordTask" style="margin-bottom: 20px; font-weight: 600; font-size: 16px; color: var(--text-main);"></p>
                 <label>补充描述/复盘：</label><textarea id="descInput" placeholder="记录这个任务的完成情况..."></textarea>
             </div>
-            <div class="modal-footer"><button class="btn-save-modal" onclick="closeDescModal()">取消</button><button class="btn-start" onclick="saveDescription()">保存</button></div>
+            <div class="modal-footer">
+                <button class="btn-small btn-flomo" style="margin-right: auto;" onclick="sendRecordToFlomo()">Flomo</button>
+                <button class="btn-save-modal" onclick="closeDescModal()">取消</button>
+                <button class="btn-start" onclick="saveDescription()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="planDescModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>📅 规划详情</h2><span class="close" onclick="closePlanDescModal()">&times;</span></div>
+            <div class="modal-body">
+                <label>规划内容：</label><input type="text" id="editPlanContent">
+                <label>备注/描述：</label><textarea id="editPlanDesc" placeholder="为该规划添加备注信息..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save-modal" onclick="closePlanDescModal()">取消</button>
+                <button class="btn-start" onclick="savePlanDesc()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dailyReviewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>📅 今日复盘</h2><span class="close" onclick="closeDailyReviewModal()">&times;</span></div>
+            <div class="modal-body">
+                <label>今日总结：</label>
+                <textarea id="dailyReviewInput" placeholder="回顾今天的工作，写下你的成就、反思和改进计划..." style="height: 200px; padding: 15px; font-size: 15px;"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-small btn-flomo" style="margin-right: auto;" onclick="sendDailyReviewToFlomo()">Flomo</button>
+                <button class="btn-save-modal" onclick="closeDailyReviewModal()">取消</button>
+            </div>
         </div>
     </div>
 
@@ -489,8 +650,8 @@
         <div class="modal-content">
             <div class="modal-header"><h2>📥 导入数据确认</h2><span class="close" onclick="closeImportModal()">&times;</span></div>
             <div class="modal-body">
-                <p>您希望如何处理数据？</p>
-                <div style="background: var(--bg-gray); padding: 15px; border-radius: 8px; font-size: 14px; color: var(--text-sub);">
+                <p style="color: var(--text-main);">您希望如何处理数据？</p>
+                <div style="background: var(--bg-section); padding: 15px; border-radius: 8px; font-size: 14px; color: var(--text-sub);">
                     <p style="margin-bottom: 8px;"><strong>选项 1: 清空并导入</strong> - 适合新的一天</p><p><strong>选项 2: 全部导入</strong> - 适合恢复工作</p>
                 </div>
             </div>
@@ -500,6 +661,7 @@
 
     <script>
         window.currentTask = null;
+        window.currentTaskDescription = ""; 
         window.startTime = null;
         window.pausedTime = 0;
         window.timerInterval = null;
@@ -510,25 +672,29 @@
         window.questions = [];
         window.dailyPlans = []; 
         window.currentPlanId = null;
+        window.currentTodoId = null; 
         
         let currentQuestionId = null;
         let currentRecordIndex = null;
-        let currentTodoId = null;
+        let currentPlanEditId = null; 
         let pendingImportData = null;
 
-        // ==========================================
-        // 核心：实时触发同步助手函数
-        // ==========================================
+        // 主题切换逻辑
+        window.toggleTheme = function() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
         window.triggerSync = function() {
             if (window.saveToCloud) {
-                // 调用云端保存
                 window.saveToCloud();
             } else {
                 console.log("Cloud not ready yet.");
             }
         }
 
-        // 全局UI刷新
         window.refreshAllUI = function() {
             updateRecordsList();
             updateTodoList();
@@ -537,6 +703,12 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            // 初始化主题
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+
             refreshAllUI();
             updateSystemTime();
             setInterval(updateSystemTime, 1000);
@@ -547,63 +719,50 @@
             document.getElementById('sysClock').textContent = new Date().toLocaleTimeString('zh-CN', { hour12: false });
         }
 
-        // 辅助函数：安全转换日期
         function toSafeISO(val) {
             if (!val) return new Date().toISOString();
             const date = val instanceof Date ? val : new Date(val);
             return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
         }
 
-        // 新增功能：今日结束（导出并清空）
         window.finishToday = function() {
-            // 1. 检查是否有数据需要处理
             if (window.records.length === 0 && window.dailyPlans.length === 0 && !window.currentTask) {
                 alert("今日暂无数据，无需结算。");
                 return;
             }
 
-            // 2. 确认提示
             if (!confirm("🏁 确定要结束今日工作吗？\n\n系统将执行以下操作：\n1. 停止当前计时（如果有）\n2. 导出 Excel 表格（数据留存）\n3. 清空「今日足迹」和「今日规划」\n\n注意：待办清单和灵感洞察将保留。")) {
                 return;
             }
 
-            // 3. 处理正在进行的任务：先停止并保存到 records
             if (window.currentTask) {
                 stopTask(); 
             }
 
-            // 4. 导出表格 (仅当有记录时)
             if (window.records.length > 0) {
                 exportToExcel();
             }
 
-            // 5. 延迟清空，给导出留出时间，并刷新状态
             setTimeout(() => {
-                // 清空当日核心数据
                 window.records = [];
                 window.dailyPlans = [];
                 
-                // 重置任务状态
                 window.currentTask = null;
+                window.currentTaskDescription = "";
                 window.currentPlanId = null;
+                window.currentTodoId = null;
                 window.startTime = null;
                 window.pausedTime = 0;
                 window.isPaused = false;
                 if (window.timerInterval) clearInterval(window.timerInterval);
                 updateTimerUI(false);
 
-                // 刷新 UI
                 refreshAllUI();
                 
-                // 强制同步到云端 (清空云端对应字段)
                 triggerSync();
-                
-                // 提示完成
-                // alert("✅ 今日已结算，数据已重置！");
             }, 800); 
         }
         
-        // 按钮点击处理：本地备份
         window.handleLocalBackupClick = function() {
             try {
                 const data = {
@@ -612,7 +771,9 @@
                     questions: window.questions.map(q => ({ ...q, createdAt: toSafeISO(q.createdAt) })),
                     dailyPlans: window.dailyPlans.map(p => ({ ...p, createdAt: toSafeISO(p.createdAt) })), 
                     currentTask: window.currentTask,
+                    currentTaskDescription: window.currentTaskDescription, 
                     currentPlanId: window.currentPlanId, 
+                    currentTodoId: window.currentTodoId,
                     startTime: window.startTime,
                     pausedTime: window.pausedTime,
                     isPaused: window.isPaused,
@@ -647,24 +808,126 @@
             }
         }
 
-        // 规划相关
+        window.openDailyReviewModal = function() {
+            document.getElementById('dailyReviewModal').style.display = 'block';
+        }
+        window.closeDailyReviewModal = function() {
+            document.getElementById('dailyReviewModal').style.display = 'none';
+        }
+        window.sendDailyReviewToFlomo = function() {
+            const content = document.getElementById('dailyReviewInput').value.trim();
+            if (!content) {
+                alert("请输入复盘内容");
+                return;
+            }
+            const contentToSend = `#今日复盘\n\n${content}`;
+            const webhookUrl = "https://flomoapp.com/iwh/MjMyNTE1/896a528a72e341a87584f81234f5d2eb/";
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: contentToSend })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("✅ 今日复盘已成功发送到 Flomo！");
+                    closeDailyReviewModal();
+                    document.getElementById('dailyReviewInput').value = ''; 
+                } else {
+                    alert("❌ 发送失败，请检查网络。");
+                }
+            })
+            .catch(error => {
+                alert("❌ 发送出错：" + error.message);
+            });
+        }
+
         function addDailyPlan() {
             const input = document.getElementById('planInput');
             const text = input.value.trim();
             if (!text) { alert("请输入规划内容"); return; }
-            window.dailyPlans.push({ id: Date.now(), content: text, completed: false, createdAt: new Date().toISOString() });
+            window.dailyPlans.push({ 
+                id: Date.now(), 
+                content: text, 
+                description: '', 
+                completed: false, 
+                createdAt: new Date().toISOString() 
+            });
             input.value = ''; updatePlanList();
-            triggerSync(); // 实时同步
+            triggerSync(); 
+        }
+
+        window.movePlan = function(id, direction) {
+            const index = window.dailyPlans.findIndex(p => p.id === id);
+            if (index === -1) return;
+            
+            if (direction === -1 && index > 0) {
+                [window.dailyPlans[index], window.dailyPlans[index-1]] = [window.dailyPlans[index-1], window.dailyPlans[index]];
+            } 
+            else if (direction === 1 && index < window.dailyPlans.length - 1) {
+                [window.dailyPlans[index], window.dailyPlans[index+1]] = [window.dailyPlans[index+1], window.dailyPlans[index]];
+            }
+            
+            updatePlanList();
+            triggerSync();
         }
 
         function updatePlanList() {
             const listEl = document.getElementById('planList');
             if (window.dailyPlans.length === 0) { listEl.innerHTML = '<div class="no-records">暂无规划</div>'; return; }
-            listEl.innerHTML = window.dailyPlans.map(item => `
+            
+            listEl.innerHTML = window.dailyPlans.map((item, index) => {
+                const isFirst = index === 0;
+                const isLast = index === window.dailyPlans.length - 1;
+                
+                return `
                 <div class="plan-item ${item.completed ? 'completed' : ''}">
-                    <div><div class="plan-content">${item.content}</div><span class="plan-deadline">今日截止</span></div>
-                    ${!item.completed ? `<div class="plan-actions"><button class="btn-plan-action btn-to-footprint" onclick="startFromPlan(${item.id})">🚀 开始执行</button><button class="btn-plan-action btn-to-todo" onclick="convertPlanToTodo(${item.id})">📝 转为待办</button></div>` : ''}
-                </div>`).join('');
+                    <div class="plan-reorder">
+                        ${!isFirst ? `<button class="btn-move" onclick="movePlan(${item.id}, -1)">▲</button>` : '<div style="height:24px;"></div>'}
+                        ${!isLast ? `<button class="btn-move" onclick="movePlan(${item.id}, 1)">▼</button>` : '<div style="height:24px;"></div>'}
+                    </div>
+                    <div class="plan-main">
+                        <div onclick="openPlanDescModal(${item.id})" style="cursor: pointer;">
+                            <span class="plan-content">${item.content}</span>
+                            ${item.description ? `<div style="font-size: 13px; color: var(--text-sub); margin-top: 4px;">${item.description}</div>` : ''}
+                        </div>
+                        <span class="plan-deadline">今日截止</span>
+                        ${!item.completed ? `
+                        <div class="plan-actions">
+                            <button class="btn-plan-action btn-to-footprint" onclick="startFromPlan(${item.id})">开始执行</button>
+                            <button class="btn-plan-action btn-to-todo" onclick="convertPlanToTodo(${item.id})">转为待办</button>
+                        </div>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        
+        window.openPlanDescModal = function(id) {
+            const plan = window.dailyPlans.find(p => p.id === id);
+            if (!plan) return;
+            currentPlanEditId = id;
+            document.getElementById('editPlanContent').value = plan.content;
+            document.getElementById('editPlanDesc').value = plan.description || '';
+            document.getElementById('planDescModal').style.display = 'block';
+        }
+        
+        window.closePlanDescModal = function() {
+            document.getElementById('planDescModal').style.display = 'none';
+            currentPlanEditId = null;
+        }
+        
+        window.savePlanDesc = function() {
+            const plan = window.dailyPlans.find(p => p.id === currentPlanEditId);
+            if (plan) {
+                const newContent = document.getElementById('editPlanContent').value.trim();
+                if(!newContent) { alert("规划内容不能为空"); return; }
+                
+                plan.content = newContent;
+                plan.description = document.getElementById('editPlanDesc').value.trim();
+                updatePlanList();
+                closePlanDescModal();
+                triggerSync();
+            }
         }
 
         function startFromPlan(id) {
@@ -673,43 +936,83 @@
             if (!plan) return;
             document.getElementById('taskInput').value = plan.content;
             window.currentPlanId = id; startTask();
-            // startTask 内部会 triggerSync，所以这里不需要重复
+        }
+        
+        window.startFromTodo = function(id) {
+            if (window.currentTask) { alert("当前已有任务，请先完成或暂停！"); return; }
+            const todo = window.todos.find(t => t.id === id);
+            if (!todo) return;
+            document.getElementById('taskInput').value = todo.text;
+            window.currentTodoId = id;
+            startTask();
         }
 
         function convertPlanToTodo(id) {
             const idx = window.dailyPlans.findIndex(p => p.id === id);
             if (idx === -1) return;
             const plan = window.dailyPlans[idx];
-            window.todos.push({ id: Date.now(), text: plan.content, subtitle: "来自规划迁移", completed: false, deadline: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString() });
+            window.todos.push({ 
+                id: Date.now(), 
+                text: plan.content, 
+                subtitle: plan.description ? `(来自规划) ${plan.description}` : "来自规划迁移", 
+                completed: false, 
+                deadline: new Date().toISOString().split('T')[0], 
+                createdAt: new Date().toISOString() 
+            });
             window.dailyPlans.splice(idx, 1);
             refreshAllUI();
-            triggerSync(); // 实时同步
+            triggerSync(); 
         }
 
-        // 任务控制
         function startTask() {
             const val = document.getElementById('taskInput').value.trim();
             if (!val) { alert('请输入任务名称！'); return; }
             window.currentTask = val;
+            window.currentTaskDescription = ""; 
             window.startTime = Date.now() - window.pausedTime;
             window.isPaused = false;
             updateTimerUI(true);
             window.timerInterval = setInterval(updateTimer, 1000);
-            triggerSync(); // 实时同步
+            
+            const descInput = document.getElementById('currentTaskDescInput');
+            if (descInput) descInput.value = "";
+            
+            triggerSync(); 
+        }
+
+        window.updateCurrentDesc = function(val) {
+            window.currentTaskDescription = val;
+            triggerSync(); 
         }
 
         function stopTask() {
             clearInterval(window.timerInterval);
             const duration = window.pausedTime || (Date.now() - window.startTime);
-            window.records.push({ task: window.currentTask, duration: duration, timestamp: new Date(), description: '' });
+            
+            const description = window.currentTaskDescription || '';
+            
+            window.records.push({ 
+                task: window.currentTask, 
+                duration: duration, 
+                timestamp: new Date(), 
+                description: description 
+            });
+            
             if (window.currentPlanId) {
                 const plan = window.dailyPlans.find(p => p.id === window.currentPlanId);
                 if (plan) plan.completed = true;
                 window.currentPlanId = null;
             }
+            
+            if (window.currentTodoId) {
+                const todo = window.todos.find(t => t.id === window.currentTodoId);
+                if (todo) todo.completed = true;
+                window.currentTodoId = null;
+            }
+
             refreshAllUI();
             resetTask();
-            triggerSync(); // 实时同步
+            triggerSync(); 
         }
 
         function pauseTask() {
@@ -724,11 +1027,17 @@
                 window.isPaused = true;
                 document.getElementById('pauseBtn').textContent = '继续';
             }
-            triggerSync(); // 实时同步（记录暂停状态）
+            triggerSync(); 
         }
 
         function resetTask() {
-            window.currentTask = null; window.startTime = null; window.pausedTime = 0; window.isPaused = false; window.currentPlanId = null;
+            window.currentTask = null; 
+            window.currentTaskDescription = "";
+            window.startTime = null; 
+            window.pausedTime = 0; 
+            window.isPaused = false; 
+            window.currentPlanId = null;
+            window.currentTodoId = null;
             updateTimerUI(false);
             document.getElementById('taskInput').value = '';
         }
@@ -774,13 +1083,18 @@
                         return { ...r, timestamp: isNaN(d.getTime()) ? new Date() : d };
                     });
                     window.currentTask = data.currentTask;
+                    window.currentTaskDescription = data.currentTaskDescription || ""; 
                     window.currentPlanId = data.currentPlanId || null;
+                    window.currentTodoId = data.currentTodoId || null;
                     window.startTime = data.startTime;
                     window.pausedTime = data.pausedTime;
                     window.isPaused = data.isPaused;
                     
                     if (window.currentTask) {
                         updateTimerUI(true);
+                        const descInput = document.getElementById('currentTaskDescInput');
+                        if (descInput) descInput.value = window.currentTaskDescription;
+
                         if (window.isPaused) document.getElementById('pauseBtn').textContent = '继续';
                         else window.timerInterval = setInterval(updateTimer, 1000);
                         updateTimer();
@@ -791,7 +1105,7 @@
                 refreshAllUI();
                 closeImportModal();
                 updateSaveStatus('✅ 数据导入成功！');
-                triggerSync(); // 实时同步
+                triggerSync(); 
             } catch (err) { alert("导入错误：" + err.message); }
         }
         
@@ -816,14 +1130,14 @@
             return `${h}:${m}:${s}`;
         }
         
-        // 待办/灵感 辅助函数
         function addTodo() {
             const text = document.getElementById('todoInput').value.trim();
             if (!text) return alert('请输入内容');
             window.todos.push({ id: Date.now(), text, subtitle: document.getElementById('todoSubtitleInput').value.trim(), completed: false, deadline: document.getElementById('todoDeadline').value || null });
             document.getElementById('todoInput').value = ''; 
+            document.getElementById('todoSubtitleInput').value = '';
             updateTodoList();
-            triggerSync(); // 实时同步
+            triggerSync(); 
         }
         function toggleTodo(id) { 
             const t = window.todos.find(x => x.id === id); 
@@ -835,7 +1149,6 @@
             } 
         }
 
-        // 修改：去掉了单独的编辑按钮，改为点击内容区域编辑
         function updateTodoList() {
             const list = document.getElementById('todoList');
             if(window.todos.length===0) return list.innerHTML = '<div class="no-records">暂无待办</div>';
@@ -846,7 +1159,16 @@
                         <div class="todo-content" onclick="openTodoEditModal(${t.id})" style="cursor: pointer; flex: 1;">
                             <div class="todo-text">${t.text}</div>
                             ${t.subtitle?`<div class="todo-subtitle">${t.subtitle}</div>`:''}
-                            ${t.deadline?`<div class="todo-deadline">${t.deadline}</div>`:''}
+                            
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; min-height: 20px;">
+                                ${t.deadline ? `<div class="todo-deadline" style="margin-top: 0;">${t.deadline}</div>` : '<span></span>'}
+                                
+                                ${!t.completed ? `
+                                <button class="btn-plan-action btn-to-footprint" 
+                                    style="flex: none; width: auto; padding: 4px 8px; font-size: 12px; margin-left: 8px;" 
+                                    onclick="event.stopPropagation(); startFromTodo(${t.id})">开始执行</button>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>`).join('');
@@ -857,9 +1179,6 @@
 
         function addQuestion() { const v = document.getElementById('questionInput').value.trim(); if(!v)return alert('请输入内容'); window.questions.push({id:Date.now(), question:v, answer:'', answered:false}); document.getElementById('questionInput').value=''; updateQuestionList(); triggerSync(); }
 
-        /* -------------------------
-           修改：增加 Flomo 按钮的列表渲染
-           ------------------------- */
         function updateQuestionList() {
             const list = document.getElementById('questionList');
             if(window.questions.length === 0) return list.innerHTML = '<div class="no-records">暂无灵感</div>';
@@ -869,7 +1188,7 @@
                     <div class="question-content" onclick="openAnswerModal(${q.id})">
                         <div class="question-text">${q.question}</div>
                     </div>
-                    <div style="display: flex; align-items: center;">
+                    <div class="question-actions">
                         <button class="btn-small btn-flomo" onclick="sendToFlomo(event, ${q.id})">Flomo</button>
                         <button class="btn-small btn-delete" onclick="deleteQuestion(${q.id})">删除</button>
                     </div>
@@ -877,9 +1196,6 @@
             `).join('');
         }
 
-        /* -------------------------
-           新增：发送到 Flomo 的功能函数
-           ------------------------- */
         window.sendToFlomo = function(event, id) {
             if(event) event.stopPropagation();
 
@@ -907,13 +1223,42 @@
                 console.error("Flomo Fetch Error:", error);
             });
         }
+        
+        window.sendRecordToFlomo = function() {
+            if (currentRecordIndex === null) return;
+            const r = window.records[currentRecordIndex];
+            const currentDesc = document.getElementById('descInput').value || '（无复盘内容）';
+            
+            const contentToSend = `#任务复盘\n\n✅ 任务：${r.task}\n⏱️ 耗时：${formatDuration(r.duration)}\n\n📝 复盘/备注：\n${currentDesc}`;
+            
+            const webhookUrl = "https://flomoapp.com/iwh/MjMyNTE1/896a528a72e341a87584f81234f5d2eb/";
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: contentToSend })
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.records.splice(currentRecordIndex, 1);
+                    updateRecordsList();
+                    closeDescModal();
+                    triggerSync();
+                    alert("✅ 已发送到 Flomo 并归档（删除）！");
+                } else {
+                    alert("❌ 发送失败，请检查网络。");
+                }
+            })
+            .catch(error => {
+                alert("❌ 发送出错：" + error.message);
+            });
+        }
 
         function deleteQuestion(id) { if(confirm('删除?')) { window.questions=window.questions.filter(q=>q.id!==id); updateQuestionList(); triggerSync(); } }
         function openAnswerModal(id) { currentQuestionId=id; const q=window.questions.find(x=>x.id===id); if(q){ document.getElementById('modalQuestionText').textContent=q.question; document.getElementById('answerInput').value=q.answer||''; document.getElementById('answerModal').style.display='block'; }}
         function closeAnswerModal() { document.getElementById('answerModal').style.display='none'; currentQuestionId=null; }
         function saveAnswer() { const q=window.questions.find(x=>x.id===currentQuestionId); if(q){ q.answer=document.getElementById('answerInput').value; q.answered=!!q.answer; updateQuestionList(); closeAnswerModal(); triggerSync(); }}
 
-        // 修改：去掉了单独的复盘按钮，改为点击整个条目编辑
         function updateRecordsList() {
             const list = document.getElementById('recordsList');
             if(window.records.length===0) return list.innerHTML = '<div class="no-records">无记录</div>';
@@ -945,10 +1290,7 @@
         function closeDescModal() { document.getElementById('descModal').style.display='none'; currentRecordIndex=null; }
         function saveDescription() { if(currentRecordIndex!==null) { window.records[currentRecordIndex].description=document.getElementById('descInput').value; updateRecordsList(); closeDescModal(); triggerSync(); }}
 
-        // 导出表格
         function exportToExcel() {
-            // 注意：这里去掉了 alert 判断，因为在 finishToday 中已经判断过了。
-            // 但如果是单独调用，仍然需要保证有数据。
             if (window.records.length === 0) return;
             
             const data = window.records.map((r, i) => {
@@ -988,27 +1330,19 @@
     </script>
 
     <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-      import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyCgS797yXzTcDRBNHF0pbYYsdKe0b_WB0o",
-        authDomain: "time-tracker-bdb56.firebaseapp.com",
-        projectId: "time-tracker-bdb56",
-        storageBucket: "time-tracker-bdb56.firebasestorage.app",
-        messagingSenderId: "52472082666",
-        appId: "1:52472082666:web:96f2a3b9025adb568be793",
-        measurementId: "G-HN93S2R6WX"
-      };
+      const SUPABASE_URL = "https://ynkxpjmpazmjdjtwpggq.supabase.co";
+      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlua3hwam1wYXptamRqdHdwZ2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5MjExODEsImV4cCI6MjA4MjQ5NzE4MX0.WHgycb5URS_bzsO6WAgHHrDRAMVKOrnDhTlX7ELvo4w";
+      
+      const TABLE_NAME = "time_tracker_cloud";
+      const ROW_ID = "my_daily_data"; 
 
       let isDataLoaded = false;
 
       try {
-          const app = initializeApp(firebaseConfig);
-          const db = getFirestore(app);
-          const USER_DOC_ID = "my_daily_data"; 
+          const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-          // 1. 云端保存
           window.saveToCloud = async function() {
             if (!isDataLoaded) {
                 console.warn("云端数据尚未加载，跳过保存操作。");
@@ -1024,83 +1358,150 @@
                 return isNaN(t) ? new Date().toISOString() : t.toISOString();
             };
 
-            const data = {
+            const fullData = {
                 records: (window.records || []).map(r => ({ ...r, timestamp: safeDate(r.timestamp) })),
                 todos: (window.todos || []).map(t => ({ ...t, createdAt: safeDate(t.createdAt) })),
                 questions: (window.questions || []).map(q => ({ ...q, createdAt: safeDate(q.createdAt) })),
                 dailyPlans: (window.dailyPlans || []).map(p => ({ ...p, createdAt: safeDate(p.createdAt) })), 
                 currentTask: window.currentTask || null,
+                currentTaskDescription: window.currentTaskDescription || "", 
                 currentPlanId: window.currentPlanId || null, 
+                currentTodoId: window.currentTodoId || null,
                 startTime: window.startTime || null,
                 pausedTime: window.pausedTime || 0,
                 isPaused: window.isPaused || false,
                 lastUpdated: new Date().toISOString()
             };
 
+            const payload = {
+                id: ROW_ID,
+                data: fullData
+            };
+
             try {
-                // 使用 merge: true 防止覆盖
-                await setDoc(doc(db, "tracker_data", USER_DOC_ID), data, { merge: true });
+                const { error } = await supabase
+                    .from(TABLE_NAME)
+                    .upsert(payload);
+                
+                if (error) {
+                    console.error("Supabase Save Error Details:", error);
+                    throw error;
+                }
                 document.getElementById('saveStatus').textContent = '☁️ 已同步';
             } catch (e) {
-                console.error("Firebase Save Error: ", e);
+                alert("❌ 同步失败：\n" + (e.message || JSON.stringify(e)));
                 document.getElementById('saveStatus').textContent = '❌ 同步失败';
             }
           };
 
-          // 2. 实时监听
-          onSnapshot(doc(db, "tracker_data", USER_DOC_ID), (docSnap) => {
-            const loader = document.getElementById('loadingOverlay');
-            if (loader) {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 500);
-            }
+          function handleDataLoad(fetchedData) {
+                const loader = document.getElementById('loadingOverlay');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
 
-            isDataLoaded = true;
+                isDataLoaded = true;
 
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                window.records = (data.records || []).map(r => {
-                    const d = r.timestamp ? new Date(r.timestamp) : new Date();
-                    return { ...r, timestamp: isNaN(d) ? new Date() : d };
-                });
-                window.todos = data.todos || [];
-                window.questions = data.questions || [];
-                window.dailyPlans = data.dailyPlans || [];
-                window.currentTask = data.currentTask;
-                window.currentPlanId = data.currentPlanId;
-                window.startTime = data.startTime;
-                window.pausedTime = data.pausedTime;
-                window.isPaused = data.isPaused;
+                if (fetchedData) {
+                    const data = fetchedData; 
+                    window.records = (data.records || []).map(r => {
+                        const d = r.timestamp ? new Date(r.timestamp) : new Date();
+                        return { ...r, timestamp: isNaN(d) ? new Date() : d };
+                    });
+                    window.todos = data.todos || [];
+                    window.questions = data.questions || [];
+                    window.dailyPlans = data.dailyPlans || [];
+                    window.currentTask = data.currentTask;
+                    window.currentTaskDescription = data.currentTaskDescription || ""; 
+                    window.currentPlanId = data.currentPlanId;
+                    window.currentTodoId = data.currentTodoId;
+                    window.startTime = data.startTime;
+                    window.pausedTime = data.pausedTime;
+                    window.isPaused = data.isPaused;
 
-                if (window.refreshAllUI) window.refreshAllUI();
-                
-                if (window.currentTask) {
-                    if (window.timerInterval) clearInterval(window.timerInterval);
-                    document.getElementById('currentTaskSection').style.display = 'block';
-                    document.getElementById('currentTaskName').textContent = window.currentTask;
-                    document.getElementById('taskInput').value = window.currentTask;
-                    document.getElementById('taskInput').disabled = true;
-                    document.getElementById('startBtn').disabled = true;
-                    document.getElementById('pauseBtn').disabled = false;
-                    document.getElementById('stopBtn').disabled = false;
+                    if (window.refreshAllUI) window.refreshAllUI();
                     
-                    if (!window.isPaused) {
-                         window.timerInterval = setInterval(window.updateTimer, 1000);
-                         document.getElementById('pauseBtn').textContent = '暂停';
-                    } else {
-                        document.getElementById('pauseBtn').textContent = '继续';
-                        if(window.updateTimer) window.updateTimer();
+                    if (window.currentTask) {
+                        if (window.timerInterval) clearInterval(window.timerInterval);
+                        const currentTaskSection = document.getElementById('currentTaskSection');
+                        if (currentTaskSection) currentTaskSection.style.display = 'block';
+                        
+                        const currentTaskName = document.getElementById('currentTaskName');
+                        if (currentTaskName) currentTaskName.textContent = window.currentTask;
+                        
+                        const descInput = document.getElementById('currentTaskDescInput');
+                        if (descInput) descInput.value = window.currentTaskDescription;
+                        
+                        const taskInput = document.getElementById('taskInput');
+                        if (taskInput) {
+                            taskInput.value = window.currentTask;
+                            taskInput.disabled = true;
+                        }
+                        
+                        const startBtn = document.getElementById('startBtn');
+                        if (startBtn) startBtn.disabled = true;
+                        const pauseBtn = document.getElementById('pauseBtn');
+                        if (pauseBtn) pauseBtn.disabled = false;
+                        const stopBtn = document.getElementById('stopBtn');
+                        if (stopBtn) stopBtn.disabled = false;
+                        
+                        if (!window.isPaused) {
+                             window.timerInterval = setInterval(window.updateTimer, 1000);
+                             if (pauseBtn) pauseBtn.textContent = '暂停';
+                        } else {
+                            if (pauseBtn) pauseBtn.textContent = '继续';
+                            if(window.updateTimer) window.updateTimer();
+                        }
+                    }
+                    document.getElementById('saveStatus').textContent = '☁️ 已同步';
+                } else {
+                    document.getElementById('saveStatus').textContent = '☁️ 就绪 (新数据)';
+                }
+          }
+
+          async function initData() {
+              try {
+                  const { data: row, error } = await supabase
+                    .from(TABLE_NAME)
+                    .select('*')
+                    .eq('id', ROW_ID)
+                    .single();
+                  
+                  if (error) {
+                      if (error.code !== 'PGRST116') {
+                          alert("❌ 数据加载失败：\n" + error.message);
+                      }
+                      handleDataLoad(null); 
+                  } else {
+                      handleDataLoad(row.data);
+                  }
+              } catch (err) {
+                   alert("❌ 连接错误：\n" + err.message);
+                   handleDataLoad(null); 
+              }
+          }
+
+          const channel = supabase.channel('time-tracker-realtime')
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: TABLE_NAME, filter: `id=eq.${ROW_ID}` },
+                (payload) => {
+                    if (payload.new && payload.new.data) {
+                         handleDataLoad(payload.new.data);
                     }
                 }
-                document.getElementById('saveStatus').textContent = '☁️ 已同步';
-            } else {
-                document.getElementById('saveStatus').textContent = '☁️ 就绪 (新数据)';
-            }
-          });
+            )
+            .subscribe();
+
+          initData();
+
       } catch (err) {
-          console.error("Firebase Init Error:", err);
+          console.error("Supabase Init Error:", err);
           document.getElementById('saveStatus').textContent = '❌ 连接失败';
-          document.getElementById('loadingOverlay').style.display = 'none';
+          const loader = document.getElementById('loadingOverlay');
+          if (loader) loader.style.display = 'none';
+          alert("❌ 初始化失败：" + err.message);
       }
     </script>
 </body>
