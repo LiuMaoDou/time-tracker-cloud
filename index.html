@@ -62,57 +62,59 @@
             --radius-sm: 8px;
         }
 
-        /* === 深色模式 (使用 #1A202C 背景) === */
+        /* === 深色模式 (显著优化版) === */
         [data-theme="dark"] {
-            /* 全局背景：使用您指定的 #1A202C */
+            /* 1. 全局背景：保持您要求的 #1A202C (深灰蓝) */
             --primary-gradient: #1A202C;
             
-            /* 字体：亮白，高对比 */
-            --text-main: #f7fafc; 
-            --text-sub: #a0aec0;
+            /* 2. 核心调整：四个框的背景颜色 */
+            /* 之前是 #2D3748，现在提亮到 #374151 (灰色偏亮)，与背景形成鲜明反差，不再“黑乎乎一片” */
+            --bg-card: #374151; 
             
-            /* 边框：稍微亮一点的灰色，勾勒轮廓 */
-            --border-color: #4a5568; 
+            /* 3. 容器：轻微遮罩，让背景透出来 */
+            --bg-container: rgba(0, 0, 0, 0.2); 
+
+            /* 4. 输入区域/内部区块： */
+            /* 在亮灰色的卡片里，用深一点的颜色 (#1F2937) 做输入区，形成“凹陷”的立体感 */
+            --bg-section: #1F2937; 
+            --bg-input: #1F2937; 
+            --bg-hover: #4B5563; /* 悬停稍微变亮 */
+            --bg-sub-area: #1F2937;
             
-            /* 容器：轻微透明，融入背景 */
-            --bg-container: rgba(26, 32, 44, 0.5); 
+            /* 字体：亮白色，确保在灰色背景上清晰 */
+            --text-main: #F9FAFB; 
+            --text-sub: #D1D5DB; /* 次要文字也提亮 */
             
-            /* 卡片：比背景稍亮 (#2D3748)，形成层级 */
-            --bg-card: #2D3748; 
-            
-            /* 输入区域/区块：比卡片深 (#171923)，形成凹陷感 */
-            --bg-section: #171923; 
-            --bg-input: #171923; 
-            
-            --bg-hover: #4a5568;
-            --bg-sub-area: #171923;
+            /* 边框：浅灰色，勾勒轮廓 */
+            --border-color: #4B5563; 
 
             /* 按钮颜色适配 */
-            --btn-finish-bg: rgba(220, 38, 38, 0.15);
-            --btn-finish-text: #fc8181;
-            --btn-finish-border: #742a2a;
-            --btn-finish-hover: rgba(220, 38, 38, 0.25);
+            /* 在灰色背景上，红色/紫色按钮需要更高的亮度或不透明度 */
+            --btn-finish-bg: rgba(239, 68, 68, 0.15);
+            --btn-finish-text: #FCA5A5;
+            --btn-finish-border: #7F1D1D;
+            --btn-finish-hover: rgba(239, 68, 68, 0.25);
 
-            --btn-review-bg: rgba(118, 75, 162, 0.15);
-            --btn-review-text: #d6bcfa;
-            --btn-review-border: #553c9a;
-            --btn-review-hover: rgba(118, 75, 162, 0.25);
+            --btn-review-bg: rgba(139, 92, 246, 0.15);
+            --btn-review-text: #D8B4FE;
+            --btn-review-border: #5B21B6;
+            --btn-review-hover: rgba(139, 92, 246, 0.25);
             
-            --btn-flomo-bg: #2d3748;
-            --btn-flomo-hover: rgba(72, 187, 120, 0.15);
+            --btn-flomo-bg: #374151;
+            --btn-flomo-hover: rgba(52, 211, 153, 0.15);
 
             /* 小组件优化 */
-            --checkbox-bg: #171923;
-            --checkbox-border: #718096;
+            --checkbox-bg: #1F2937;
+            --checkbox-border: #9CA3AF; /* 边框更亮 */
             
             --btn-move-bg: rgba(255, 255, 255, 0.1);
-            --btn-move-text: #e2e8f0;
-            --btn-move-hover-bg: #4a90e2;
+            --btn-move-text: #E5E7EB;
+            --btn-move-hover-bg: #60A5FA;
             --btn-move-hover-text: #fff;
 
-            /* 阴影：加重阴影，增强立体感 */
-            --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
-            --shadow-md: 0 6px 12px -1px rgba(0, 0, 0, 0.4);
+            /* 阴影：加重阴影，让亮灰色的卡片“浮”在深色背景上 */
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; outline: none; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; }
@@ -154,8 +156,8 @@
         }
         [data-theme="dark"] h1 {
             background: none;
-            -webkit-text-fill-color: #f7fafc; /* 直接使用亮色 */
-            color: #f7fafc;
+            -webkit-text-fill-color: #F9FAFB; /* 直接使用亮白 */
+            color: #F9FAFB;
             text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
