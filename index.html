@@ -471,6 +471,22 @@
         .todo-subtitle { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
         .todo-deadline { font-size: 12px; color: var(--warning-color); margin-top: 4px; font-weight: 600; background: rgba(237, 137, 54, 0.1); display: inline-block; padding: 2px 6px; border-radius: 4px; }
 
+        /* 新增：待办分组标题样式 */
+        .todo-group-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 16px 0 8px 0;
+            padding-left: 2px;
+            display: flex;
+            align-items: center;
+            opacity: 0.9;
+        }
+        /* 深色模式下标题颜色微调 */
+        [data-theme="dark"] .todo-group-title {
+            color: #A5B4FC; 
+        }
+
         .plan-item { display: flex; gap: 10px; align-items: flex-start; }
         .plan-item.completed { opacity: 0.6; background: var(--bg-section); }
         .plan-item.completed .plan-content { text-decoration: line-through; }
@@ -610,7 +626,10 @@
                 <div class="todo-section">
                     <h2 class="section-title">📝 待办清单</h2>
                     <div class="todo-input-section">
-                        <input type="text" id="todoInput" placeholder="输入待办事项...">
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="todoProjectInput" placeholder="项目 (如:工作)..." style="flex: 0 0 110px;">
+                            <input type="text" id="todoInput" placeholder="输入待办事项..." style="flex: 1;">
+                        </div>
                         <input type="text" id="todoSubtitleInput" placeholder="补充描述（可选）...">
                         <input type="date" id="todoDeadline">
                         <button class="btn-add-todo" onclick="addTodo()">添加任务</button>
@@ -636,6 +655,7 @@
         <div class="modal-content">
             <div class="modal-header"><h2>✏️ 编辑待办</h2><span class="close" onclick="closeTodoEditModal()">&times;</span></div>
             <div class="modal-body">
+                <label>所属项目：</label><input type="text" id="editTodoProject" placeholder="例如：工作、生活、学习">
                 <label>待办内容：</label><input type="text" id="editTodoText">
                 <label>补充描述：</label><input type="text" id="editTodoSubtitle">
                 <label>截止日期：</label><input type="date" id="editTodoDeadline">
@@ -731,6 +751,16 @@
         let currentPlanEditId = null; 
         let pendingImportData = null;
 
+        // 防抖函数定义：彻底解决输入时的高频同步抖动
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
         // 主题切换逻辑
         window.toggleTheme = function() {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -746,6 +776,11 @@
                 console.log("Cloud not ready yet.");
             }
         }
+
+        // 创建防抖版本的 sync，延迟 1000ms（1秒）
+        const debouncedSave = debounce(function() {
+            window.triggerSync();
+        }, 1000); 
 
         window.refreshAllUI = function() {
             updateRecordsList();
@@ -1195,9 +1230,23 @@
         function addTodo() {
             const text = document.getElementById('todoInput').value.trim();
             if (!text) return alert('请输入内容');
-            window.todos.push({ id: Date.now(), text, subtitle: document.getElementById('todoSubtitleInput').value.trim(), completed: false, deadline: document.getElementById('todoDeadline').value || null });
+            
+            // 获取项目输入
+            const project = document.getElementById('todoProjectInput').value.trim();
+
+            window.todos.push({ 
+                id: Date.now(), 
+                text, 
+                subtitle: document.getElementById('todoSubtitleInput').value.trim(), 
+                completed: false, 
+                deadline: document.getElementById('todoDeadline').value || null,
+                project: project // 存储项目字段
+            });
             document.getElementById('todoInput').value = ''; 
             document.getElementById('todoSubtitleInput').value = '';
+            // 可选：是否清空项目输入框？如果不清空，可以方便连续添加同项目任务。暂时保留不清空。
+            // document.getElementById('todoProjectInput').value = ''; 
+            
             updateTodoList();
             triggerSync(); 
         }
@@ -1214,13 +1263,45 @@
         function updateTodoList() {
             const list = document.getElementById('todoList');
             if(window.todos.length===0) return list.innerHTML = '<div class="no-records">暂无待办</div>';
-            list.innerHTML = window.todos.map(t => `
+            
+            // 1. 分组逻辑
+            const groups = {};
+            const noProjectKey = '___uncategorized___';
+            
+            window.todos.forEach(t => {
+                const p = t.project && t.project.trim() ? t.project.trim() : noProjectKey;
+                if(!groups[p]) groups[p] = [];
+                groups[p].push(t);
+            });
+            
+            // 2. 排序：有项目的按名称排，无项目的放最后
+            let groupKeys = Object.keys(groups).sort((a,b) => a.localeCompare(b, 'zh-CN'));
+            // 将 noProjectKey 移到最后
+            if(groupKeys.includes(noProjectKey)) {
+                groupKeys = groupKeys.filter(k => k !== noProjectKey).concat([noProjectKey]);
+            }
+            
+            // 3. 生成 HTML
+            let html = '';
+            
+            // 如果只有一个分组且是未分类，就不显示标题了，直接列表
+            const showHeaders = groupKeys.length > 1 || groupKeys[0] !== noProjectKey;
+            
+            groupKeys.forEach(key => {
+                const items = groups[key];
+                if(items.length === 0) return;
+                
+                if(showHeaders) {
+                    const title = key === noProjectKey ? '📥 未分类' : `📂 ${key}`;
+                    html += `<div class="todo-group-title">${title} <span style="font-weight:normal; opacity:0.5; margin-left:6px; font-size:12px;">${items.length}</span></div>`;
+                }
+                
+                html += items.map(t => `
                 <div class="todo-item ${t.completed?'completed':''}">
                     <div class="todo-header">
                         <input type="checkbox" class="todo-checkbox" ${t.completed?'checked':''} onchange="toggleTodo(${t.id})">
                         <div class="todo-content" onclick="openTodoEditModal(${t.id})" style="cursor: pointer; flex: 1;">
-                            <div class="todo-text">${t.text}</div>
-                            ${t.subtitle?`<div class="todo-subtitle">${t.subtitle}</div>`:''}
+                            <div class="todo-text">${t.text}</div> ${t.subtitle?`<div class="todo-subtitle">${t.subtitle}</div>`:''}
                             
                             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; min-height: 20px;">
                                 ${t.deadline ? `<div class="todo-deadline" style="margin-top: 0;">${t.deadline}</div>` : '<span></span>'}
@@ -1234,10 +1315,37 @@
                         </div>
                     </div>
                 </div>`).join('');
+            });
+            
+            list.innerHTML = html;
         }
-        function openTodoEditModal(id) { currentTodoId = id; const t = window.todos.find(x=>x.id===id); if(t){ document.getElementById('editTodoText').value=t.text; document.getElementById('editTodoSubtitle').value=t.subtitle||''; document.getElementById('editTodoDeadline').value=t.deadline||''; document.getElementById('todoEditModal').style.display='block'; }}
+        
+        function openTodoEditModal(id) { 
+            currentTodoId = id; 
+            const t = window.todos.find(x=>x.id===id); 
+            if(t){ 
+                document.getElementById('editTodoText').value=t.text; 
+                document.getElementById('editTodoSubtitle').value=t.subtitle||''; 
+                document.getElementById('editTodoDeadline').value=t.deadline||''; 
+                document.getElementById('editTodoProject').value=t.project||''; // 加载项目数据
+                document.getElementById('todoEditModal').style.display='block'; 
+            }
+        }
+        
         function closeTodoEditModal() { document.getElementById('todoEditModal').style.display='none'; currentTodoId=null; }
-        function saveTodoEdit() { const t = window.todos.find(x=>x.id===currentTodoId); if(t){ t.text=document.getElementById('editTodoText').value; t.subtitle=document.getElementById('editTodoSubtitle').value; t.deadline=document.getElementById('editTodoDeadline').value; updateTodoList(); closeTodoEditModal(); triggerSync(); }}
+        
+        function saveTodoEdit() { 
+            const t = window.todos.find(x=>x.id===currentTodoId); 
+            if(t){ 
+                t.text=document.getElementById('editTodoText').value; 
+                t.subtitle=document.getElementById('editTodoSubtitle').value; 
+                t.deadline=document.getElementById('editTodoDeadline').value; 
+                t.project=document.getElementById('editTodoProject').value.trim(); // 保存项目数据
+                updateTodoList(); 
+                closeTodoEditModal(); 
+                triggerSync(); 
+            }
+        }
 
         function addQuestion() { const v = document.getElementById('questionInput').value.trim(); if(!v)return alert('请输入内容'); window.questions.push({id:Date.now(), question:v, answer:'', answered:false}); document.getElementById('questionInput').value=''; updateQuestionList(); triggerSync(); }
 
