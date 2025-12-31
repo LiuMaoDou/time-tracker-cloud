@@ -13,7 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
-            /* === 浅色模式 (保持不变) === */
+            /* === 浅色模式 === */
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             
             --primary-color: #667eea;
@@ -62,33 +62,23 @@
             --radius-sm: 8px;
         }
 
-        /* === 深色模式 (微调优化版) === */
+        /* === 深色模式 === */
         [data-theme="dark"] {
-            /* 1. 全局背景：保持 #1A202C */
-            --primary-gradient: #1A202C;
+            --primary-gradient: #1A202C; /* 背景深色 */
             
-            /* 2. 核心调整：卡片背景 */
-            /* 使用 #283240，它正好位于背景(#1A202C)和亮灰(#374151)之间 */
-            --bg-card: #283240; 
-            
-            /* 3. 容器：半透明 */
+            --bg-card: #283240; /* 卡片中间色 */
             --bg-container: rgba(0, 0, 0, 0.2); 
 
-            /* 4. 输入区域/内部区块 */
-            /* 比卡片稍深，形成凹陷感，增强层次 */
-            --bg-section: #1D2430; 
+            --bg-section: #1D2430; /* 输入区稍暗 */
             --bg-input: #1D2430; 
             --bg-hover: #374151;
             --bg-sub-area: #1D2430;
             
-            /* 字体 */
             --text-main: #F7FAFC; 
             --text-sub: #A0AEC0; 
             
-            /* 边框：比卡片稍亮，勾勒轮廓 */
             --border-color: #3F4A5E; 
 
-            /* 按钮颜色适配 */
             --btn-finish-bg: rgba(220, 38, 38, 0.15);
             --btn-finish-text: #FCA5A5;
             --btn-finish-border: #7F1D1D;
@@ -102,7 +92,6 @@
             --btn-flomo-bg: #283240;
             --btn-flomo-hover: rgba(72, 187, 120, 0.15);
 
-            /* 小组件优化 */
             --checkbox-bg: #1D2430;
             --checkbox-border: #718096;
             
@@ -111,7 +100,6 @@
             --btn-move-hover-bg: #4299E1;
             --btn-move-hover-text: #fff;
 
-            /* 阴影 */
             --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
             --shadow-md: 0 6px 12px -1px rgba(0, 0, 0, 0.4);
         }
@@ -139,7 +127,7 @@
             border-radius: 20px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             padding: 40px;
-            border: 1px solid var(--border-color); /* 增加边框 */
+            border: 1px solid var(--border-color); 
         }
 
         h1 {
@@ -272,6 +260,7 @@
             justify-content: flex-end;
             margin-left: 15px;
             font-weight: 500;
+            min-width: 100px; 
         }
 
         .save-indicator {
@@ -596,7 +585,11 @@
                         <h2>正在进行</h2>
                         <div id="currentTaskName"></div>
                         <div class="timer" id="timer">00:00:00</div>
-                        <textarea id="currentTaskDescInput" placeholder="在此记录任务备注、灵感或进展..." style="margin-top: 15px; height: 80px; font-size: 14px; resize: vertical;" oninput="updateCurrentDesc(this.value)"></textarea>
+                        <textarea id="currentTaskDescInput" placeholder="在此记录任务备注、灵感或进展..." style="margin-top: 15px; height: 80px; font-size: 14px; resize: vertical;" oninput="updateLocalDesc(this.value)"></textarea>
+                        <div style="text-align: right; margin-top: 10px;">
+                            <span id="manualSaveMsg" style="font-size: 12px; color: var(--success-color); margin-right: 10px; opacity: 0; transition: opacity 0.5s;">✅ 已同步</span>
+                            <button class="btn-small btn-start" onclick="saveCurrentTaskDesc()">💾 保存备注</button>
+                        </div>
                     </div>
                     <div id="recordsList"><div class="no-records">今天还没有开始记录，加油！</div></div>
                 </div>
@@ -1039,9 +1032,19 @@
             triggerSync(); 
         }
 
-        window.updateCurrentDesc = function(val) {
+        // 修改：这里只更新本地变量，不触发同步
+        window.updateLocalDesc = function(val) {
             window.currentTaskDescription = val;
-            triggerSync(); 
+        }
+
+        // 新增：手动保存按钮触发同步
+        window.saveCurrentTaskDesc = function() {
+            triggerSync();
+            const msg = document.getElementById('manualSaveMsg');
+            if(msg) {
+                msg.style.opacity = 1;
+                setTimeout(() => msg.style.opacity = 0, 2000);
+            }
         }
 
         function stopTask() {
@@ -1490,7 +1493,10 @@
                         if (currentTaskName) currentTaskName.textContent = window.currentTask;
                         
                         const descInput = document.getElementById('currentTaskDescInput');
-                        if (descInput) descInput.value = window.currentTaskDescription;
+                        // 关键修改：如果当前用户焦点正在输入框中，不要覆盖 value，防止打字被打断
+                        if (descInput && document.activeElement !== descInput) {
+                            descInput.value = window.currentTaskDescription;
+                        }
                         
                         const taskInput = document.getElementById('taskInput');
                         if (taskInput) {
