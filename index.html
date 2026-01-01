@@ -34,22 +34,35 @@
             --bg-hover: #f7fafc;
             --bg-sub-area: #fafafa;
             
-            /* 按钮颜色 */
+            /* 1. 今日结束 (红色系 - 保持不变) */
             --btn-finish-bg: #fef2f2;
             --btn-finish-text: #dc2626;
             --btn-finish-border: #fecaca;
             --btn-finish-hover: #fee2e2;
             
+            /* 2. 今日复盘 (紫色系 - 保持不变) */
             --btn-review-bg: #f3ebff;
             --btn-review-text: #764ba2;
             --btn-review-border: #d6bcfa;
             --btn-review-hover: #e9d8fd;
 
-            /* 新增：健身按钮颜色 (青色系) */
+            /* 3. 以终为始 (青色系 - 保持不变) */
             --btn-fitness-bg: #e6fffa;
             --btn-fitness-text: #2c7a7b;
             --btn-fitness-border: #81e6d9;
             --btn-fitness-hover: #b2f5ea;
+
+            /* 4. 新增：数据操作按钮 (蓝色系 - 风格模仿今日结束) */
+            --btn-data-bg: #ebf8ff;
+            --btn-data-text: #2b6cb0;
+            --btn-data-border: #bee3f8;
+            --btn-data-hover: #bee3f8;
+
+            /* 5. 主题切换按钮 (增强对比度) */
+            --btn-theme-bg: #ffffff;
+            --btn-theme-text: #4a5568;
+            --btn-theme-border: #cbd5e0;
+            --btn-theme-hover: #edf2f7;
 
             --btn-flomo-bg: #ffffff;
             --btn-flomo-hover: #f0fff4;
@@ -70,12 +83,12 @@
 
         /* === 深色模式 === */
         [data-theme="dark"] {
-            --primary-gradient: #1A202C; /* 背景深色 */
+            --primary-gradient: #1A202C; 
             
-            --bg-card: #283240; /* 卡片中间色 */
+            --bg-card: #283240; 
             --bg-container: rgba(0, 0, 0, 0.2); 
 
-            --bg-section: #1D2430; /* 输入区稍暗 */
+            --bg-section: #1D2430; 
             --bg-input: #1D2430; 
             --bg-hover: #374151;
             --bg-sub-area: #1D2430;
@@ -95,11 +108,22 @@
             --btn-review-border: #553C9A;
             --btn-review-hover: rgba(118, 75, 162, 0.25);
             
-            /* 新增：健身按钮颜色适配 (深青色半透明) */
             --btn-fitness-bg: rgba(56, 178, 172, 0.15);
             --btn-fitness-text: #81e6d9;
             --btn-fitness-border: #285e61;
             --btn-fitness-hover: rgba(56, 178, 172, 0.25);
+
+            /* 数据按钮适配深色 */
+            --btn-data-bg: rgba(66, 153, 225, 0.15);
+            --btn-data-text: #90CDF4;
+            --btn-data-border: #2B6CB0;
+            --btn-data-hover: rgba(66, 153, 225, 0.25);
+
+            /* 主题按钮适配深色 */
+            --btn-theme-bg: #2D3748;
+            --btn-theme-text: #E2E8F0;
+            --btn-theme-border: #4A5568;
+            --btn-theme-hover: #4A5568;
 
             --btn-flomo-bg: #283240;
             --btn-flomo-hover: rgba(72, 187, 120, 0.15);
@@ -168,7 +192,7 @@
 
         .file-controls {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             margin-bottom: 30px;
             padding: 20px;
             background: var(--bg-card);
@@ -195,67 +219,69 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .file-controls label { background: var(--primary-color); color: white; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3); }
-        .file-controls label:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(102, 126, 234, 0.4); }
-
-        .btn-local-save { 
-            background: var(--primary-color); 
-            color: white; 
-            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-        }
-        .btn-local-save:hover { 
-            transform: translateY(-1px); 
-            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.4);
-            filter: brightness(1.1); 
-        }
-
+        /* 1. 主题切换按钮样式 (图标版) */
         .btn-theme {
-            background: var(--bg-section);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
+            background: var(--btn-theme-bg);
+            color: var(--btn-theme-text);
+            border: 1px solid var(--btn-theme-border);
+            padding: 10px 14px; /* 调整 padding 适应图标 */
+            font-size: 18px; /* 图标放大 */
+            line-height: 1;
+            margin-right: 5px;
         }
         .btn-theme:hover {
-            background: var(--bg-hover);
+            background: var(--btn-theme-hover);
             transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
+        /* 2. 数据操作按钮样式 (仿今日结束风格) */
+        .btn-data { 
+            background: var(--btn-data-bg); 
+            color: var(--btn-data-text); 
+            border: 1px solid var(--btn-data-border); 
+            box-shadow: 0 2px 4px rgba(66, 153, 225, 0.15);
+        }
+        .btn-data:hover { 
+            background: var(--btn-data-hover); 
+            transform: translateY(-1px); 
+            box-shadow: 0 4px 6px rgba(66, 153, 225, 0.25);
+        }
+
+        /* 3. 今日复盘按钮 */
         .btn-daily-review {
             background: var(--btn-review-bg); 
             color: var(--btn-review-text); 
             border: 1px solid var(--btn-review-border); 
             box-shadow: 0 2px 4px rgba(118, 75, 162, 0.15);
-            margin-left: auto; /* 靠右对齐 */
         }
-
         .btn-daily-review:hover {
             background: var(--btn-review-hover);
             transform: translateY(-1px);
             box-shadow: 0 4px 6px rgba(118, 75, 162, 0.2);
         }
 
-        /* 新增：健身按钮样式 */
+        /* 4. 以终为始按钮 */
         .btn-fitness {
             background: var(--btn-fitness-bg); 
             color: var(--btn-fitness-text); 
             border: 1px solid var(--btn-fitness-border); 
             box-shadow: 0 2px 4px rgba(56, 178, 172, 0.15);
-            margin-left: 10px; /* 紧跟在复盘按钮右边 */
+            margin-left: auto; /* 靠右对齐 */
         }
-
         .btn-fitness:hover {
             background: var(--btn-fitness-hover);
             transform: translateY(-1px);
             box-shadow: 0 4px 6px rgba(56, 178, 172, 0.2);
         }
 
+        /* 5. 今日结束按钮 */
 		.btn-finish { 
 			background: var(--btn-finish-bg); 
 			color: var(--btn-finish-text); 
 			box-shadow: 0 2px 4px rgba(220, 38, 38, 0.15); 
-            margin-left: 10px; 
             border: 1px solid var(--btn-finish-border); 
 		}
-
 		.btn-finish:hover { 
 			background: var(--btn-finish-hover); 
 			transform: translateY(-1px); 
@@ -498,7 +524,6 @@
         .todo-subtitle { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
         .todo-deadline { font-size: 12px; color: var(--warning-color); margin-top: 4px; font-weight: 600; background: rgba(237, 137, 54, 0.1); display: inline-block; padding: 2px 6px; border-radius: 4px; }
 
-        /* 新增：待办分组标题样式 */
         .todo-group-title {
             font-size: 13px;
             font-weight: 700;
@@ -592,17 +617,17 @@
         <h1>🏃‍♂️‍➡️ 吾生有涯，不负韶华 🧘‍♂</h1>
         
         <div class="file-controls">
-            <label for="fileInput">📂 加载本地数据</label>
+            <button class="btn-theme" onclick="toggleTheme()" title="切换主题">🌓</button>
+
+            <label for="fileInput" class="btn-data">📂 数据加载</label>
             <input type="file" id="fileInput" accept=".json" onchange="loadFromFile(event)">
             
-            <button class="btn-local-save" onclick="handleLocalBackupClick()">💾 本地备份</button>
+            <button class="btn-data" onclick="handleLocalBackupClick()">💾 本地备份</button>
 
-            <button class="btn-theme" onclick="toggleTheme()">🌓 切换主题</button>
+            <button class="btn-fitness" onclick="window.open('https://liumaodou.xyz/vigor-tracker/', '_blank')">💪 以终为始</button>
             
-            <button class="btn-daily-review" onclick="openDailyReviewModal()">📅 今日复盘</button>
+            <button class="btn-daily-review" style="margin-left: 10px;" onclick="openDailyReviewModal()">📅 今日复盘</button>
             
-            <button class="btn-fitness" onclick="window.open('https://liumaodou.xyz/vigor-tracker/', '_blank')">💪 健身运动</button>
-
             <button class="btn-finish" onclick="finishToday()">🎉 今日结束</button>
             
             <div id="sysClock" class="clock-display">00:00:00</div>
