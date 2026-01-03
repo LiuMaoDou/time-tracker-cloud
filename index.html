@@ -520,8 +520,34 @@
             transform: scale(1);
         }
         
-        .todo-text { font-weight: 700; color: var(--text-main); font-size: 15px; }
-        .todo-subtitle { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
+        /* 修改：todo-content 支持 flex 和截断 */
+        .todo-content { 
+            flex: 1;
+            min-width: 0; /* 关键：防止 flex 子项无限撑开 */
+            margin-right: 10px;
+            cursor: pointer; 
+        }
+
+        /* 修改：todo-text 支持省略号 */
+        .todo-text { 
+            font-weight: 700; 
+            color: var(--text-main); 
+            font-size: 15px; 
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 修改：todo-subtitle 支持省略号 */
+        .todo-subtitle { 
+            font-size: 13px; 
+            color: var(--text-sub); 
+            margin-top: 4px; 
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .todo-deadline { font-size: 12px; color: var(--warning-color); margin-top: 4px; font-weight: 600; background: rgba(237, 137, 54, 0.1); display: inline-block; padding: 2px 6px; border-radius: 4px; }
 
         .todo-group-title {
@@ -536,6 +562,14 @@
         }
         [data-theme="dark"] .todo-group-title {
             color: #A5B4FC; 
+        }
+
+        /* 新增：SVG 图标样式 */
+        .group-icon {
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+            vertical-align: sub;
         }
 
         .plan-item { display: flex; gap: 10px; align-items: flex-start; }
@@ -1338,12 +1372,23 @@
             // 如果只有一个分组且是未分类，就不显示标题了，直接列表
             const showHeaders = groupKeys.length > 1 || groupKeys[0] !== noProjectKey;
             
+            // 定义 SVG 图标 (文件夹 & 收件箱)
+            const iconFolder = `<svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+            
+            const iconInbox = `<svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>`;
+
             groupKeys.forEach(key => {
                 const items = groups[key];
                 if(items.length === 0) return;
                 
                 if(showHeaders) {
-                    const title = key === noProjectKey ? '📥 未分类' : `📂 ${key}`;
+                    // 使用 SVG 替换 Emoji
+                    const icon = key === noProjectKey ? iconInbox : iconFolder;
+                    const name = key === noProjectKey ? '未分类' : key;
+                    
+                    // 组合标题 HTML
+                    const title = `${icon} ${name}`;
+                    
                     html += `<div class="todo-group-title">${title} <span style="font-weight:normal; opacity:0.5; margin-left:6px; font-size:12px;">${items.length}</span></div>`;
                 }
                 
@@ -1351,7 +1396,7 @@
                 <div class="todo-item ${t.completed?'completed':''}">
                     <div class="todo-header">
                         <input type="checkbox" class="todo-checkbox" ${t.completed?'checked':''} onchange="toggleTodo(${t.id})">
-                        <div class="todo-content" onclick="openTodoEditModal(${t.id})" style="cursor: pointer; flex: 1;">
+                        <div class="todo-content" onclick="openTodoEditModal(${t.id})">
                             <div class="todo-text">${t.text}</div> ${t.subtitle?`<div class="todo-subtitle">${t.subtitle}</div>`:''}
                             
                             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; min-height: 20px;">
