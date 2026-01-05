@@ -1329,8 +1329,10 @@
             });
             document.getElementById('todoInput').value = ''; 
             document.getElementById('todoSubtitleInput').value = '';
-            // 可选：是否清空项目输入框？如果不清空，可以方便连续添加同项目任务。暂时保留不清空。
-            // document.getElementById('todoProjectInput').value = ''; 
+            // 清空项目输入框
+            document.getElementById('todoProjectInput').value = ''; 
+            // 清空截止日期
+            document.getElementById('todoDeadline').value = '';
             
             updateTodoList();
             triggerSync(); 
