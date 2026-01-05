@@ -1110,12 +1110,27 @@
             window.currentPlanId = id; startTask();
         }
         
+        // 修改：点击开始执行时，直接从待办列表中移除该项
         window.startFromTodo = function(id) {
             if (window.currentTask) { alert("当前已有任务，请先完成或暂停！"); return; }
-            const todo = window.todos.find(t => t.id === id);
-            if (!todo) return;
+            
+            // 找到任务索引
+            const index = window.todos.findIndex(t => t.id === id);
+            if (index === -1) return;
+            
+            const todo = window.todos[index];
+            
+            // 设置当前任务名称
             document.getElementById('taskInput').value = todo.text;
-            window.currentTodoId = id;
+            
+            // 立即从待办列表中删除
+            window.todos.splice(index, 1);
+            updateTodoList();
+
+            // 由于已删除，不需要再设置 currentTodoId 来标记完成状态
+            window.currentTodoId = null;
+            
+            // 开始任务
             startTask();
         }
 
