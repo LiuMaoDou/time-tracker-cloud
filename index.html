@@ -559,6 +559,11 @@
             display: flex;
             align-items: center;
             opacity: 0.9;
+            cursor: pointer;
+            user-select: none;
+        }
+        .todo-group-title:hover {
+            opacity: 1;
         }
         [data-theme="dark"] .todo-group-title {
             color: #A5B4FC; 
@@ -570,6 +575,14 @@
             height: 18px;
             margin-right: 6px;
             vertical-align: sub;
+        }
+        .collapse-icon {
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+            margin-right: 4px;
+            font-size: 12px;
+            transition: transform 0.2s;
         }
 
         .plan-item { display: flex; gap: 10px; align-items: flex-start; }
@@ -835,6 +848,9 @@
         let currentRecordIndex = null;
         let currentPlanEditId = null; 
         let pendingImportData = null;
+
+        // 待办事项折叠状态
+        window.todoGroupStates = {};
 
         // 防抖函数定义：彻底解决输入时的高频同步抖动
         function debounce(func, wait) {
@@ -1362,6 +1378,12 @@
             } 
         }
 
+        // 新增：切换分组折叠状态
+        window.toggleTodoGroup = function(groupKey) {
+            window.todoGroupStates[groupKey] = !window.todoGroupStates[groupKey];
+            updateTodoList();
+        }
+
         function updateTodoList() {
             const list = document.getElementById('todoList');
             if(window.todos.length===0) return list.innerHTML = '<div class="no-records">暂无待办</div>';
@@ -1376,58 +1398,78 @@
                 groups[p].push(t);
             });
             
-            // 2. 排序：有项目的按名称排，无项目的放最后
+            // 2. 排序分组：有项目的按名称排，无项目的放最后
             let groupKeys = Object.keys(groups).sort((a,b) => a.localeCompare(b, 'zh-CN'));
-            // 将 noProjectKey 移到最后
             if(groupKeys.includes(noProjectKey)) {
                 groupKeys = groupKeys.filter(k => k !== noProjectKey).concat([noProjectKey]);
             }
             
             // 3. 生成 HTML
             let html = '';
-            
-            // 如果只有一个分组且是未分类，就不显示标题了，直接列表
             const showHeaders = groupKeys.length > 1 || groupKeys[0] !== noProjectKey;
             
-            // 定义 SVG 图标 (文件夹 & 收件箱)
             const iconFolder = `<svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
-            
             const iconInbox = `<svg class="group-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>`;
 
             groupKeys.forEach(key => {
-                const items = groups[key];
+                let items = groups[key];
                 if(items.length === 0) return;
+
+                // ** 新增：组内排序 (截止日期近的在前) **
+                items.sort((a, b) => {
+                    // 如果都有日期，按日期比较（字符串比较即可，ISO格式兼容）
+                    if (a.deadline && b.deadline) return a.deadline.localeCompare(b.deadline);
+                    // 如果 a 有日期 b 没有，a 排前
+                    if (a.deadline) return -1;
+                    // 如果 b 有日期 a 没有，b 排前
+                    if (b.deadline) return 1;
+                    return 0;
+                });
                 
+                // ** 新增：获取折叠状态 **
+                const isCollapsed = window.todoGroupStates[key] || false;
+                const collapseIcon = isCollapsed ? '▶' : '▼';
+
                 if(showHeaders) {
-                    // 使用 SVG 替换 Emoji
                     const icon = key === noProjectKey ? iconInbox : iconFolder;
                     const name = key === noProjectKey ? '未分类' : key;
-                    
-                    // 组合标题 HTML
                     const title = `${icon} ${name}`;
                     
-                    html += `<div class="todo-group-title">${title} <span style="font-weight:normal; opacity:0.5; margin-left:6px; font-size:12px;">${items.length}</span></div>`;
+                    // ** 修改：增加点击事件和折叠图标 **
+                    html += `<div class="todo-group-title" onclick="toggleTodoGroup('${key.replace(/'/g, "\\'")}')">
+                                <span class="collapse-icon">${collapseIcon}</span>
+                                ${title} 
+                                <span style="font-weight:normal; opacity:0.5; margin-left:6px; font-size:12px;">${items.length}</span>
+                             </div>`;
                 }
                 
-                html += items.map(t => `
-                <div class="todo-item ${t.completed?'completed':''}">
-                    <div class="todo-header">
-                        <input type="checkbox" class="todo-checkbox" ${t.completed?'checked':''} onchange="toggleTodo(${t.id})">
-                        <div class="todo-content" onclick="openTodoEditModal(${t.id})">
-                            <div class="todo-text">${t.text}</div> ${t.subtitle?`<div class="todo-subtitle">${t.subtitle}</div>`:''}
-                            
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; min-height: 20px;">
-                                ${t.deadline ? `<div class="todo-deadline" style="margin-top: 0;">${t.deadline}</div>` : '<span></span>'}
-                                
-                                ${!t.completed ? `
-                                <button class="btn-plan-action btn-to-footprint" 
-                                    style="flex: none; width: auto; padding: 4px 8px; font-size: 12px; margin-left: 8px;" 
-                                    onclick="event.stopPropagation(); startFromTodo(${t.id})">开始执行</button>
-                                ` : ''}
+                // ** 新增：如果折叠了，就不渲染下面的 items **
+                if (!isCollapsed) {
+                    html += items.map(t => {
+                        // ** 修改：日期格式化 (2025-12-19 -> 25-12-19) **
+                        const dateDisplay = t.deadline ? t.deadline.slice(2) : '';
+
+                        return `
+                        <div class="todo-item ${t.completed?'completed':''}">
+                            <div class="todo-header">
+                                <input type="checkbox" class="todo-checkbox" ${t.completed?'checked':''} onchange="toggleTodo(${t.id})">
+                                <div class="todo-content" onclick="openTodoEditModal(${t.id})">
+                                    <div class="todo-text">${t.text}</div> ${t.subtitle?`<div class="todo-subtitle">${t.subtitle}</div>`:''}
+                                    
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; min-height: 20px;">
+                                        ${dateDisplay ? `<div class="todo-deadline" style="margin-top: 0;">${dateDisplay}</div>` : '<span></span>'}
+                                        
+                                        ${!t.completed ? `
+                                        <button class="btn-plan-action btn-to-footprint" 
+                                            style="flex: none; width: auto; padding: 4px 8px; font-size: 12px; margin-left: 8px;" 
+                                            onclick="event.stopPropagation(); startFromTodo(${t.id})">开始执行</button>
+                                        ` : ''}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>`).join('');
+                        </div>`;
+                    }).join('');
+                }
             });
             
             list.innerHTML = html;
