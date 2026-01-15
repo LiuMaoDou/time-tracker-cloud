@@ -407,7 +407,7 @@
             transform: translateY(-1px);
         }
 
-        .task-input-section, .todo-input-section, .question-input-section, .plan-input-section { 
+        .task-input-section { 
             display: flex; 
             flex-direction: column; 
             gap: 12px; 
@@ -421,6 +421,24 @@
         .task-input-section input { width: 100%; }
         .task-buttons-row { display: flex; gap: 10px; width: 100%; }
         .task-buttons-row button { flex: 1; }
+
+        /* === 新增：标题栏添加按钮样式 === */
+        .btn-add-icon {
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            font-size: 24px;
+            line-height: 1;
+            padding: 0 8px;
+            cursor: pointer;
+            margin-left: auto; /* 自动靠右 */
+            transition: color 0.2s, transform 0.2s;
+            font-weight: bold;
+        }
+        .btn-add-icon:hover {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
 
         .current-task { background: var(--bg-card); padding: 25px; border-radius: var(--radius-md); margin-bottom: 25px; border: 1px solid var(--border-color); text-align: center; box-shadow: var(--shadow-sm); }
         .current-task h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-sub); margin-bottom: 10px; }
@@ -520,7 +538,6 @@
             transform: scale(1);
         }
         
-        /* 修改：todo-content 支持 flex 和截断 */
         .todo-content { 
             flex: 1;
             min-width: 0; /* 关键：防止 flex 子项无限撑开 */
@@ -528,7 +545,6 @@
             cursor: pointer; 
         }
 
-        /* 修改：todo-text 支持省略号 */
         .todo-text { 
             font-weight: 700; 
             color: var(--text-main); 
@@ -538,7 +554,6 @@
             text-overflow: ellipsis;
         }
 
-        /* 修改：todo-subtitle 支持省略号 */
         .todo-subtitle { 
             font-size: 13px; 
             color: var(--text-sub); 
@@ -569,7 +584,6 @@
             color: #A5B4FC; 
         }
 
-        /* 新增：SVG 图标样式 */
         .group-icon {
             width: 18px;
             height: 18px;
@@ -713,38 +727,76 @@
 
             <div class="plan-section-container">
                 <div class="plan-section">
-                    <h2 class="section-title">🗓️ 今日规划</h2>
-                    <div class="plan-input-section">
-                        <input type="text" id="planInput" placeholder="输入今日规划...">
-                        <button class="btn-add-plan" onclick="addDailyPlan()">添加规划</button>
-                    </div>
+                    <h2 class="section-title">
+                        🗓️ 今日规划 
+                        <button class="btn-add-icon" onclick="openAddPlanModal()" title="添加规划">+</button>
+                    </h2>
                     <div id="planList"><div class="no-records">暂无规划</div></div>
                 </div>
             </div>
 
             <div class="middle-section">
                 <div class="todo-section">
-                    <h2 class="section-title">📝 待办清单</h2>
-                    <div class="todo-input-section">
-                        <input type="text" id="todoInput" placeholder="输入待办事项...">
-                        <input type="text" id="todoProjectInput" placeholder="所属项目 (如:工作)...">
-                        <input type="text" id="todoSubtitleInput" placeholder="补充描述（可选）...">
-                        <input type="date" id="todoDeadline">
-                        <button class="btn-add-todo" onclick="addTodo()">添加任务</button>
-                    </div>
+                    <h2 class="section-title">
+                        📝 待办清单 
+                        <button class="btn-add-icon" onclick="openAddTodoModal()" title="添加待办">+</button>
+                    </h2>
                     <div id="todoList"><div class="no-records">暂无待办</div></div>
                 </div>
             </div>
 
             <div class="right-section">
                 <div class="question-section">
-                    <h2 class="section-title">💡 灵感洞察</h2>
-                    <div class="question-input-section">
-                        <input type="text" id="questionInput" placeholder="捕捉闪念、问题...">
-                        <button class="btn-add-question" onclick="addQuestion()">记录想法</button>
-                    </div>
+                    <h2 class="section-title">
+                        💡 灵感洞察 
+                        <button class="btn-add-icon" onclick="openAddQuestionModal()" title="记录灵感">+</button>
+                    </h2>
                     <div id="questionList"><div class="no-records">静候灵感降临...</div></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="addPlanModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>🗓️ 添加今日规划</h2><span class="close" onclick="closeAddPlanModal()">&times;</span></div>
+            <div class="modal-body">
+                <label>规划内容：</label>
+                <input type="text" id="planInput" placeholder="输入今日规划...">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save-modal" onclick="closeAddPlanModal()">取消</button>
+                <button class="btn-add-plan" onclick="addDailyPlan()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addTodoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>📝 添加待办事项</h2><span class="close" onclick="closeAddTodoModal()">&times;</span></div>
+            <div class="modal-body">
+                <label>待办内容：</label><input type="text" id="todoInput" placeholder="输入待办事项...">
+                <label>所属项目：</label><input type="text" id="todoProjectInput" placeholder="所属项目 (如:工作)...">
+                <label>补充描述：</label><input type="text" id="todoSubtitleInput" placeholder="补充描述（可选）...">
+                <label>截止日期：</label><input type="date" id="todoDeadline">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save-modal" onclick="closeAddTodoModal()">取消</button>
+                <button class="btn-add-todo" onclick="addTodo()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addQuestionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>💡 记录灵感</h2><span class="close" onclick="closeAddQuestionModal()">&times;</span></div>
+            <div class="modal-body">
+                <label>灵感内容：</label>
+                <input type="text" id="questionInput" placeholder="捕捉闪念、问题...">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save-modal" onclick="closeAddQuestionModal()">取消</button>
+                <button class="btn-add-question" onclick="addQuestion()">记录</button>
             </div>
         </div>
     </div>
@@ -870,9 +922,12 @@
             localStorage.setItem('theme', newTheme);
         }
 
-        window.triggerSync = function() {
+        // 修复：将 triggerSync 改为异步函数，确保数据完全保存到云端后再继续执行
+        // 问题：之前是同步调用，导致勾选待办后删除操作还没保存就执行了下一步
+        // 解决：使用 async/await 等待 saveToCloud 完成，保证数据同步的可靠性
+        window.triggerSync = async function() {
             if (window.saveToCloud) {
-                window.saveToCloud();
+                await window.saveToCloud(); // 等待云端保存完成
             } else {
                 console.log("Cloud not ready yet.");
             }
@@ -1030,6 +1085,25 @@
             });
         }
 
+        // === 新增：模态框控制逻辑 ===
+        window.openAddPlanModal = function() { 
+            document.getElementById('addPlanModal').style.display = 'block'; 
+            document.getElementById('planInput').focus(); 
+        }
+        window.closeAddPlanModal = function() { document.getElementById('addPlanModal').style.display = 'none'; }
+
+        window.openAddTodoModal = function() { 
+            document.getElementById('addTodoModal').style.display = 'block'; 
+            document.getElementById('todoInput').focus(); 
+        }
+        window.closeAddTodoModal = function() { document.getElementById('addTodoModal').style.display = 'none'; }
+
+        window.openAddQuestionModal = function() { 
+            document.getElementById('addQuestionModal').style.display = 'block'; 
+            document.getElementById('questionInput').focus(); 
+        }
+        window.closeAddQuestionModal = function() { document.getElementById('addQuestionModal').style.display = 'none'; }
+
         function addDailyPlan() {
             const input = document.getElementById('planInput');
             const text = input.value.trim();
@@ -1041,7 +1115,9 @@
                 completed: false, 
                 createdAt: new Date().toISOString() 
             });
-            input.value = ''; updatePlanList();
+            input.value = ''; 
+            updatePlanList();
+            closeAddPlanModal(); // 新增：关闭模态框
             triggerSync(); 
         }
 
@@ -1366,16 +1442,35 @@
             document.getElementById('todoDeadline').value = '';
             
             updateTodoList();
+            closeAddTodoModal(); // 新增：关闭模态框
             triggerSync(); 
         }
-        function toggleTodo(id) { 
-            const t = window.todos.find(x => x.id === id); 
-            if(t) { 
-                t.completed = !t.completed; 
-                updateTodoList(); 
-                triggerSync(); 
-                if(t.completed) setTimeout(() => { window.todos = window.todos.filter(x => x.id !== id); updateTodoList(); triggerSync(); }, 500);
-            } 
+        // 修复：待办勾选后的同步问题
+        // 问题：勾选后页面消失，但刷新后任务又回来了（删除操作未成功保存到云端）
+        // 原因：triggerSync() 是异步的，但没有等待完成就执行了删除，导致删除状态未同步
+        // 解决：改为 async/await 模式，确保每一步都同步完成后再执行下一步
+        async function toggleTodo(id) {
+            const t = window.todos.find(x => x.id === id);
+            if(t) {
+                // 1. 先标记为已完成
+                t.completed = !t.completed;
+                updateTodoList();
+
+                // 2. 等待完成状态保存到云端（关键修复点）
+                await triggerSync();
+
+                // 3. 如果是勾选完成，500ms 后执行删除操作
+                if(t.completed) {
+                    setTimeout(async () => {
+                        // 从数组中移除已完成的任务
+                        window.todos = window.todos.filter(x => x.id !== id);
+                        updateTodoList();
+
+                        // 等待删除操作保存到云端（关键修复点）
+                        await triggerSync();
+                    }, 500);
+                }
+            }
         }
 
         // 新增：切换分组折叠状态
@@ -1502,7 +1597,15 @@
             }
         }
 
-        function addQuestion() { const v = document.getElementById('questionInput').value.trim(); if(!v)return alert('请输入内容'); window.questions.push({id:Date.now(), question:v, answer:'', answered:false}); document.getElementById('questionInput').value=''; updateQuestionList(); triggerSync(); }
+        function addQuestion() { 
+            const v = document.getElementById('questionInput').value.trim(); 
+            if(!v) return alert('请输入内容'); 
+            window.questions.push({id:Date.now(), question:v, answer:'', answered:false}); 
+            document.getElementById('questionInput').value=''; 
+            updateQuestionList(); 
+            closeAddQuestionModal(); // 新增：关闭模态框
+            triggerSync(); 
+        }
 
         function updateQuestionList() {
             const list = document.getElementById('questionList');
