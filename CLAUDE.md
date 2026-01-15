@@ -57,6 +57,168 @@ CSS variables-based theming with `data-theme="dark"` attribute:
 - Dark mode with muted colors and adapted shadows
 - Theme persisted in `localStorage`
 
+## Code Standards and Conventions
+
+### **MANDATORY: All code must include comments**
+
+When writing or modifying code, you **MUST** add comprehensive comments. This is a strict requirement.
+
+### Comment Guidelines
+
+#### 1. Function-Level Comments
+Every new or modified function must have a comment block explaining:
+- **Purpose**: What the function does
+- **Problem**: What issue it solves (if fixing a bug)
+- **Solution**: How it solves the problem
+- **Parameters**: What inputs it expects (if complex)
+
+**Example**:
+```javascript
+// 修复：待办勾选后的同步问题
+// 问题：勾选后页面消失，但刷新后任务又回来了（删除操作未成功保存到云端）
+// 原因：triggerSync() 是异步的，但没有等待完成就执行了删除，导致删除状态未同步
+// 解决：改为 async/await 模式，确保每一步都同步完成后再执行下一步
+async function toggleTodo(id) {
+    // Function body...
+}
+```
+
+#### 2. Step-by-Step Comments
+For multi-step logic, use numbered comments to show execution flow:
+
+```javascript
+async function toggleTodo(id) {
+    const t = window.todos.find(x => x.id === id);
+    if(t) {
+        // 1. 先标记为已完成
+        t.completed = !t.completed;
+        updateTodoList();
+
+        // 2. 等待完成状态保存到云端（关键修复点）
+        await triggerSync();
+
+        // 3. 如果是勾选完成，500ms 后执行删除操作
+        if(t.completed) {
+            setTimeout(async () => {
+                // 从数组中移除已完成的任务
+                window.todos = window.todos.filter(x => x.id !== id);
+                updateTodoList();
+
+                // 等待删除操作保存到云端（关键修复点）
+                await triggerSync();
+            }, 500);
+        }
+    }
+}
+```
+
+#### 3. Inline Comments for Critical Lines
+Mark important logic with inline comments:
+
+```javascript
+await window.saveToCloud(); // 等待云端保存完成
+if (descInput && document.activeElement !== descInput) { // 防止打字时被打断
+    descInput.value = window.currentTaskDescription;
+}
+```
+
+#### 4. Section Comments for CSS
+Group related CSS rules with section headers:
+
+```css
+/* === 深色模式 === */
+[data-theme="dark"] {
+    --primary-gradient: #1A202C;
+    /* ... */
+}
+
+/* === 今日结束按钮样式 === */
+.btn-finish {
+    background: var(--btn-finish-bg);
+    /* ... */
+}
+```
+
+### JavaScript Style Guidelines
+
+1. **Variable Naming**:
+   - Use `camelCase` for variables and functions
+   - Use descriptive names: `currentTaskDescription` not `desc`
+   - Boolean variables should start with `is`, `has`, `can`: `isDataLoaded`, `isPaused`
+
+2. **Async/Await**:
+   - Always use `async/await` for Supabase operations
+   - Always `await` `triggerSync()` when data must be saved before continuing
+   - Never fire-and-forget async operations that affect data integrity
+
+3. **Error Handling**:
+   - Use try-catch for Supabase operations
+   - Show user-friendly alerts for errors
+   - Log errors to console for debugging
+
+4. **Data Mutations**:
+   - Always call the corresponding `update*List()` after modifying data arrays
+   - Always call `triggerSync()` after data changes
+   - Use `debouncedSave()` for frequent updates (e.g., typing)
+
+### CSS Style Guidelines
+
+1. **CSS Variables**:
+   - Use existing CSS variables for colors: `var(--primary-color)`, `var(--text-main)`
+   - Define both light and dark mode values when adding new variables
+
+2. **Naming**:
+   - Use kebab-case: `.btn-add-icon`, `.todo-group-title`
+   - Use descriptive class names that reflect purpose
+
+3. **Responsiveness**:
+   - Test changes on mobile (media query at `@media (max-width: 768px)`)
+
+### Supabase Sync Guidelines
+
+**Critical Rules**:
+1. Always `await` async sync operations when order matters
+2. Never start a new operation before the previous sync completes (if they're related)
+3. Use `isDataLoaded` flag to prevent saves before initial load
+4. Normalize all dates to ISO format before saving: `new Date().toISOString()`
+
+**Example of Correct Sync Pattern**:
+```javascript
+// ✅ CORRECT: Wait for each sync to complete
+async function deleteItem(id) {
+    // 1. Mark as deleted
+    item.deleted = true;
+    await triggerSync(); // Wait for mark to save
+
+    // 2. Actually remove from array
+    items = items.filter(x => x.id !== id);
+    await triggerSync(); // Wait for deletion to save
+}
+
+// ❌ INCORRECT: Fire-and-forget causes race conditions
+function deleteItem(id) {
+    item.deleted = true;
+    triggerSync(); // Doesn't wait!
+    items = items.filter(x => x.id !== id);
+    triggerSync(); // Might save before first sync completes!
+}
+```
+
+### Comment Language
+
+- Use **Chinese** for comments (matching the UI language)
+- Use English for technical terms: `async/await`, `Supabase`, `debounce`
+- Be clear and concise
+
+### When to Add Extra Comments
+
+Add detailed comments when:
+- Fixing a bug (explain the bug, cause, and fix)
+- Implementing complex logic (multi-step processes)
+- Working with async operations (explain the order and why)
+- Adding workarounds (explain why the workaround is needed)
+- Modifying data sync logic (explain data flow)
+
 ## Common Development Tasks
 
 ### Adding New Features

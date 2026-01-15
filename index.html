@@ -184,11 +184,14 @@
             text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
+        /* === 主布局区域 === */
+        /* 修复：统一四个区域的宽度，使视觉更加平衡 */
+        /* 调整：将今日足迹从 flex: 1.2 改为 flex: 1，使四个区域等宽 */
         .main-layout { display: flex; gap: 20px; }
-        .left-section { flex: 1.2; min-width: 300px; }
-        .plan-section-container { flex: 1; min-width: 280px; } 
-        .middle-section { flex: 1; min-width: 280px; }
-        .right-section { flex: 1; min-width: 280px; }
+        .left-section { flex: 1; min-width: 300px; } /* 今日足迹 - 统一为等宽 */
+        .plan-section-container { flex: 1; min-width: 280px; } /* 今日规划 */
+        .middle-section { flex: 1; min-width: 280px; } /* 待办清单 */
+        .right-section { flex: 1; min-width: 280px; } /* 灵感洞察 */
 
         .file-controls {
             display: flex;
@@ -340,16 +343,40 @@
         }
         input[type="text"]:focus, input[type="date"]:focus, textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); }
         
+        /* === 任务控制按钮样式 === */
+        /* 基础按钮样式 */
         button { padding: 10px 20px; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; font-family: inherit; }
         button:active { transform: scale(0.98); }
         button:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
 
+        /* 优化：任务控制按钮改为图标模式，统一尺寸和样式 */
+        /* 开始、暂停、完成按钮现在只显示SVG图标，通过title属性显示提示文字 */
+        .btn-start, .btn-pause, .btn-stop {
+            width: 50px;  /* 固定宽度 */
+            height: 50px; /* 固定高度，形成正方形 */
+            padding: 0;   /* 移除内边距 */
+            border-radius: 12px; /* 圆角 */
+            position: relative; /* 用于定位tooltip */
+        }
+
+        /* SVG图标在按钮内居中显示 */
+        .btn-start svg, .btn-pause svg, .btn-stop svg {
+            width: 24px;
+            height: 24px;
+            fill: white; /* SVG填充色为白色 */
+        }
+
+        /* 开始按钮：绿色 */
         .btn-start { background: var(--success-color); color: white; box-shadow: 0 2px 5px rgba(72, 187, 120, 0.3); }
-        .btn-start:hover:not(:disabled) { background: #38a169; transform: translateY(-1px); }
+        .btn-start:hover:not(:disabled) { background: #38a169; transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 8px rgba(72, 187, 120, 0.4); }
+
+        /* 暂停按钮：橙色 */
         .btn-pause { background: var(--warning-color); color: white; box-shadow: 0 2px 5px rgba(237, 137, 54, 0.3); }
-        .btn-pause:hover:not(:disabled) { background: #dd6b20; transform: translateY(-1px); }
+        .btn-pause:hover:not(:disabled) { background: #dd6b20; transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 8px rgba(237, 137, 54, 0.4); }
+
+        /* 完成按钮：红色 */
         .btn-stop { background: var(--danger-color); color: white; box-shadow: 0 2px 5px rgba(245, 101, 101, 0.3); }
-        .btn-stop:hover:not(:disabled) { background: #e53e3e; transform: translateY(-1px); }
+        .btn-stop:hover:not(:disabled) { background: #e53e3e; transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 8px rgba(245, 101, 101, 0.4); }
         
         .btn-delete { background: var(--bg-card); color: var(--danger-color); border: 1px solid rgba(245, 101, 101, 0.2); padding: 6px 12px; font-size: 13px; }
         .btn-delete:hover { background: var(--bg-finish-bg); border-color: var(--danger-color); transform: translateY(-1px); }
@@ -422,22 +449,61 @@
         .task-buttons-row { display: flex; gap: 10px; width: 100%; }
         .task-buttons-row button { flex: 1; }
 
-        /* === 新增：标题栏添加按钮样式 === */
+        /* === 美化：标题栏添加按钮样式 === */
+        /* 优化：从简单的文字+号改为带背景的圆形按钮，提升视觉效果和可点击性 */
         .btn-add-icon {
-            background: transparent;
-            border: none;
+            /* 圆形按钮基础样式 */
+            width: 32px;
+            height: 32px;
+            border-radius: 50%; /* 圆形 */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            /* 颜色和背景 */
+            background: var(--bg-section); /* 使用主题背景色 */
+            border: 2px solid var(--border-color); /* 边框增强立体感 */
             color: var(--text-sub);
-            font-size: 24px;
+
+            /* 字体样式 */
+            font-size: 20px;
             line-height: 1;
-            padding: 0 8px;
-            cursor: pointer;
-            margin-left: auto; /* 自动靠右 */
-            transition: color 0.2s, transform 0.2s;
             font-weight: bold;
+
+            /* 布局定位 */
+            padding: 0;
+            margin-left: auto; /* 自动靠右对齐 */
+            cursor: pointer;
+
+            /* 动画过渡效果 */
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* 轻微阴影 */
         }
+
+        /* Hover 悬停效果：渐变背景 + 缩放 + 阴影增强 */
         .btn-add-icon:hover {
-            color: var(--primary-color);
-            transform: scale(1.1);
+            background: var(--primary-gradient); /* 使用主题渐变色 */
+            color: white; /* 白色图标更醒目 */
+            border-color: transparent; /* 隐藏边框 */
+            transform: scale(1.15) rotate(90deg); /* 放大并旋转90度 */
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); /* 增强阴影 */
+        }
+
+        /* Active 点击效果：轻微缩小 */
+        .btn-add-icon:active {
+            transform: scale(1.05) rotate(90deg);
+        }
+
+        /* 深色模式适配 */
+        [data-theme="dark"] .btn-add-icon {
+            background: var(--bg-input);
+            border-color: var(--border-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .btn-add-icon:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .current-task { background: var(--bg-card); padding: 25px; border-radius: var(--radius-md); margin-bottom: 25px; border: 1px solid var(--border-color); text-align: center; box-shadow: var(--shadow-sm); }
@@ -706,9 +772,26 @@
                     <div class="task-input-section">
                         <input type="text" id="taskInput" placeholder="准备开始什么任务？...">
                         <div class="task-buttons-row">
-                            <button class="btn-start" id="startBtn" onclick="startTask()">开始专注</button>
-                            <button class="btn-pause" id="pauseBtn" onclick="pauseTask()" disabled>暂停</button>
-                            <button class="btn-stop" id="stopBtn" onclick="stopTask()" disabled>完成</button>
+                            <!-- 开始按钮：播放图标 -->
+                            <button class="btn-start" id="startBtn" onclick="startTask()" title="开始专注">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 5v14l11-7z" fill="white"/>
+                                </svg>
+                            </button>
+
+                            <!-- 暂停按钮：双竖条图标 -->
+                            <button class="btn-pause" id="pauseBtn" onclick="pauseTask()" disabled title="暂停">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" fill="white"/>
+                                </svg>
+                            </button>
+
+                            <!-- 完成按钮：勾号图标 -->
+                            <button class="btn-stop" id="stopBtn" onclick="stopTask()" disabled title="完成任务">
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     <div class="current-task" id="currentTaskSection" style="display: none;">
@@ -936,7 +1019,30 @@
         // 创建防抖版本的 sync，延迟 1000ms（1秒）
         const debouncedSave = debounce(function() {
             window.triggerSync();
-        }, 1000); 
+        }, 1000);
+
+        // 优化：暂停按钮图标切换辅助函数
+        // 功能：根据暂停状态动态切换按钮图标和提示文字
+        // 暂停状态：显示"播放"图标（继续执行）
+        // 运行状态：显示"暂停"图标（两个竖条）
+        function updatePauseButtonIcon(isPaused) {
+            const pauseBtn = document.getElementById('pauseBtn');
+            if (!pauseBtn) return;
+
+            if (isPaused) {
+                // 暂停状态：显示播放图标（继续）
+                pauseBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 5v14l11-7z" fill="white"/>
+                </svg>`;
+                pauseBtn.title = '继续';
+            } else {
+                // 运行状态：显示暂停图标（双竖条）
+                pauseBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" fill="white"/>
+                </svg>`;
+                pauseBtn.title = '暂停';
+            }
+        } 
 
         window.refreshAllUI = function() {
             updateRecordsList();
@@ -1304,19 +1410,23 @@
             triggerSync(); 
         }
 
+        // 暂停/继续任务
+        // 优化：使用图标切换函数代替直接修改文字
         function pauseTask() {
             if (window.isPaused) {
+                // 从暂停恢复到运行状态
                 window.startTime = Date.now() - window.pausedTime;
                 window.isPaused = false;
                 window.timerInterval = setInterval(updateTimer, 1000);
-                document.getElementById('pauseBtn').textContent = '暂停';
+                updatePauseButtonIcon(false); // 显示暂停图标
             } else {
+                // 从运行切换到暂停状态
                 clearInterval(window.timerInterval);
                 window.pausedTime = Date.now() - window.startTime;
                 window.isPaused = true;
-                document.getElementById('pauseBtn').textContent = '继续';
+                updatePauseButtonIcon(true); // 显示播放图标（继续）
             }
-            triggerSync(); 
+            triggerSync();
         }
 
         function resetTask() {
@@ -1331,10 +1441,13 @@
             document.getElementById('taskInput').value = '';
         }
 
+        // 更新计时器UI状态
+        // 优化：使用图标切换函数来重置暂停按钮状态
         function updateTimerUI(isActive) {
             const section = document.getElementById('currentTaskSection');
             const input = document.getElementById('taskInput');
             if (isActive) {
+                // 任务开始：启用暂停和停止按钮
                 section.style.display = 'block';
                 document.getElementById('currentTaskName').textContent = window.currentTask;
                 input.disabled = true;
@@ -1342,13 +1455,14 @@
                 document.getElementById('pauseBtn').disabled = false;
                 document.getElementById('stopBtn').disabled = false;
             } else {
+                // 任务结束：重置所有按钮状态
                 section.style.display = 'none';
                 document.getElementById('timer').textContent = '00:00:00';
                 input.disabled = false;
                 document.getElementById('startBtn').disabled = false;
                 document.getElementById('pauseBtn').disabled = true;
                 document.getElementById('stopBtn').disabled = true;
-                document.getElementById('pauseBtn').textContent = '暂停';
+                updatePauseButtonIcon(false); // 重置为暂停图标
             }
         }
 
@@ -1358,11 +1472,16 @@
             document.getElementById('timer').textContent = formatDuration(elapsed);
         }
 
+        // 导入数据确认处理函数
+        // 修复：导入时也要过滤已完成的待办任务
         function confirmImport(clearRecords) {
             if (!pendingImportData) return;
             try {
                 const data = pendingImportData;
-                window.todos = data.todos || [];
+
+                // 过滤掉已完成的待办任务，防止导入残留任务（关键修复点）
+                window.todos = (data.todos || []).filter(t => !t.completed);
+
                 window.questions = data.questions || [];
                 window.dailyPlans = data.dailyPlans || [];
                 
@@ -1384,8 +1503,12 @@
                         const descInput = document.getElementById('currentTaskDescInput');
                         if (descInput) descInput.value = window.currentTaskDescription;
 
-                        if (window.isPaused) document.getElementById('pauseBtn').textContent = '继续';
-                        else window.timerInterval = setInterval(updateTimer, 1000);
+                        // 根据暂停状态更新按钮图标
+                        if (window.isPaused) {
+                            updatePauseButtonIcon(true); // 显示播放图标（继续）
+                        } else {
+                            window.timerInterval = setInterval(updateTimer, 1000);
+                        }
                         updateTimer();
                     }
                 } else {
@@ -1822,6 +1945,10 @@
             }
           };
 
+          // 修复：加载数据时的清理逻辑
+          // 问题：页面刷新后，已勾选但未删除的任务会残留在列表中
+          // 原因：toggleTodo 有 500ms 延迟删除，如果期间刷新页面，completed=true 的任务会被重新加载
+          // 解决：在数据加载时自动过滤掉所有 completed=true 的待办任务
           function handleDataLoad(fetchedData) {
                 const loader = document.getElementById('loadingOverlay');
                 if (loader) {
@@ -1832,12 +1959,15 @@
                 isDataLoaded = true;
 
                 if (fetchedData) {
-                    const data = fetchedData; 
+                    const data = fetchedData;
                     window.records = (data.records || []).map(r => {
                         const d = r.timestamp ? new Date(r.timestamp) : new Date();
                         return { ...r, timestamp: isNaN(d) ? new Date() : d };
                     });
-                    window.todos = data.todos || [];
+
+                    // 过滤掉已完成的待办任务，防止刷新后残留（关键修复点）
+                    window.todos = (data.todos || []).filter(t => !t.completed);
+
                     window.questions = data.questions || [];
                     window.dailyPlans = data.dailyPlans || [];
                     window.currentTask = data.currentTask;
@@ -1876,12 +2006,13 @@
                         if (pauseBtn) pauseBtn.disabled = false;
                         const stopBtn = document.getElementById('stopBtn');
                         if (stopBtn) stopBtn.disabled = false;
-                        
+
+                        // 根据暂停状态更新按钮图标
                         if (!window.isPaused) {
                              window.timerInterval = setInterval(window.updateTimer, 1000);
-                             if (pauseBtn) pauseBtn.textContent = '暂停';
+                             updatePauseButtonIcon(false); // 显示暂停图标
                         } else {
-                            if (pauseBtn) pauseBtn.textContent = '继续';
+                            updatePauseButtonIcon(true); // 显示播放图标（继续）
                             if(window.updateTimer) window.updateTimer();
                         }
                     }
