@@ -75,6 +75,9 @@
             --btn-move-hover-bg: #4a90e2;
             --btn-move-hover-text: #fff;
 
+            /* 日期选择器图标颜色变量（浅色模式） */
+            --date-picker-icon-filter: none;
+
             --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --radius-md: 12px;
@@ -135,6 +138,10 @@
             --btn-move-text: #E2E8F0;
             --btn-move-hover-bg: #4299E1;
             --btn-move-hover-text: #fff;
+
+            /* 日期选择器图标颜色变量（深色模式） */
+            /* 说明：通过反色让日历图标在深色输入框里保持可见 */
+            --date-picker-icon-filter: invert(1) brightness(1.2);
 
             --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
             --shadow-md: 0 6px 12px -1px rgba(0, 0, 0, 0.4);
@@ -401,6 +408,14 @@
             font-family: inherit; 
         }
         input[type="text"]:focus, input[type="date"]:focus, textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15); }
+
+        /* 修复：深色模式下 date 输入框日历图标过暗看不清 */
+        /* 方案：通过 CSS filter 统一控制系统日历图标对比度 */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: var(--date-picker-icon-filter);
+            opacity: 1;
+            cursor: pointer;
+        }
         
         /* === 任务控制按钮样式 === */
         /* 基础按钮样式 */
@@ -1167,7 +1182,9 @@
                 <label>补充描述：</label><input type="text" id="editTodoSubtitle">
                 <label>截止日期：</label><input type="date" id="editTodoDeadline">
             </div>
-            <div class="modal-footer"><button class="btn-save-modal" onclick="closeTodoEditModal()">取消</button><button class="btn-start" onclick="saveTodoEdit()">保存修改</button></div>
+            <!-- 优化：待办编辑弹窗主按钮文案与尺寸统一 -->
+            <!-- 调整：将“保存修改”改为“保存”，并使用 .btn-save-modal 使其与“取消”按钮同尺寸 -->
+            <div class="modal-footer"><button class="btn-save-modal" onclick="closeTodoEditModal()">取消</button><button class="btn-save-modal" onclick="saveTodoEdit()">保存</button></div>
         </div>
     </div>
 
