@@ -175,7 +175,15 @@
             background: var(--primary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .title-icon {
+            width: 24px;
+            height: 24px;
+            color: var(--text-main);
+            margin: 0 6px;
+            vertical-align: -4px;
+            -webkit-text-fill-color: currentColor;
         }
         [data-theme="dark"] h1 {
             background: none;
@@ -222,15 +230,38 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
+        /* 通用：Lucide 风格图标样式 */
+        .icon-lucide {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            display: inline-block;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+        .icon-lucide-sm { width: 14px; height: 14px; }
+        .icon-lucide-lg { width: 20px; height: 20px; }
+
         /* 1. 主题切换按钮样式 (图标版) */
+        /* 优化：使用 Lucide 风格 sun/moon 图标，替代 emoji，提升一致性 */
         .btn-theme {
             background: var(--btn-theme-bg);
             color: var(--btn-theme-text);
             border: 1px solid var(--btn-theme-border);
-            padding: 10px 14px; /* 调整 padding 适应图标 */
-            font-size: 18px; /* 图标放大 */
+            padding: 10px 12px;
             line-height: 1;
             margin-right: 5px;
+            min-width: 44px;
+        }
+        .btn-theme .btn-icon {
+            width: 20px;
+            height: 20px;
+            display: block;
+            flex-shrink: 0;
         }
         .btn-theme:hover {
             background: var(--btn-theme-hover);
@@ -239,15 +270,25 @@
         }
 
         /* 2. 数据操作按钮样式 (仿今日结束风格) */
-        .btn-data { 
-            background: var(--btn-data-bg); 
-            color: var(--btn-data-text); 
-            border: 1px solid var(--btn-data-border); 
+        /* 修复：数据加载按钮图标变形问题 */
+        /* 问题：emoji 图标在不同系统字体下会出现拉伸或错位 */
+        /* 解决：改用固定宽高的 SVG 图标，并统一图标与文字间距 */
+        .btn-data {
+            background: var(--btn-data-bg);
+            color: var(--btn-data-text);
+            border: 1px solid var(--btn-data-border);
             box-shadow: 0 2px 4px rgba(66, 153, 225, 0.15);
+            gap: 6px;
         }
-        .btn-data:hover { 
-            background: var(--btn-data-hover); 
-            transform: translateY(-1px); 
+        .btn-data .btn-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            display: block;
+        }
+        .btn-data:hover {
+            background: var(--btn-data-hover);
+            transform: translateY(-1px);
             box-shadow: 0 4px 6px rgba(66, 153, 225, 0.25);
         }
 
@@ -276,6 +317,11 @@
             background: var(--btn-fitness-hover);
             transform: translateY(-1px);
             box-shadow: 0 4px 6px rgba(56, 178, 172, 0.2);
+        }
+
+        /* 优化：顶部功能按钮统一图标与文字间距 */
+        .btn-fitness, .btn-daily-review, .btn-finish {
+            gap: 6px;
         }
 
         /* 5. 今日结束按钮 */
@@ -353,9 +399,9 @@
         /* 开始、暂停、完成按钮现在只显示SVG图标，通过title属性显示提示文字 */
         .btn-start, .btn-pause, .btn-stop {
             width: 50px;  /* 固定宽度 */
-            height: 50px; /* 固定高度，形成正方形 */
+            height: 44px; /* 调整：高度变短，提升紧凑感 */
             padding: 0;   /* 移除内边距 */
-            border-radius: 12px; /* 圆角 */
+            border-radius: 10px; /* 配合较短高度微调圆角 */
             position: relative; /* 用于定位tooltip */
         }
 
@@ -399,10 +445,27 @@
         .btn-add-todo:hover, .btn-add-question:hover { background: #6b46c1; transform: translateY(-1px); }
         .btn-add-plan { background: var(--plan-color); color: white; box-shadow: 0 2px 5px rgba(74, 144, 226, 0.3); }
         .btn-add-plan:hover { background: #357abd; transform: translateY(-1px); }
+
+        /* 修复：备注保存按钮不使用 .btn-start 的方形图标尺寸 */
+        /* 问题：.btn-start 被用于计时器图标按钮，宽高固定为 50x44 */
+        /* 解决：单独提供 .btn-save-note，保持文本按钮正常宽高 */
+        .btn-save-note {
+            background: var(--success-color);
+            color: white;
+            box-shadow: 0 2px 5px rgba(72, 187, 120, 0.3);
+            padding: 6px 12px;
+            width: auto;
+            height: auto;
+            border-radius: var(--radius-sm);
+        }
+        .btn-save-note:hover {
+            background: #38a169;
+            transform: translateY(-1px);
+        }
         
         .btn-save-modal { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); }
         .btn-save-modal:hover { background: var(--bg-section); border-color: #cbd5e0; }
-        .btn-small { padding: 6px 12px; font-size: 13px; }
+        .btn-small { padding: 6px 12px; font-size: 13px; gap: 6px; }
 
         .plan-reorder {
             display: flex;
@@ -685,13 +748,23 @@
         @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-content { background-color: var(--bg-card); margin: 5% auto; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: none; padding: 35px; width: 90%; max-width: 600px; position: relative; animation: slideDown 0.3s; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .modal-header h2 { font-size: 20px; font-weight: 700; margin: 0; color: var(--text-main); }
+        .modal-header h2 { font-size: 20px; font-weight: 700; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .close { color: var(--text-sub); font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
         .close:hover { color: var(--text-main); }
         .modal-body { margin-bottom: 25px; }
         .modal-body label { display: block; color: var(--text-main); font-size: 14px; font-weight: 600; margin-bottom: 8px; margin-top: 15px; }
         .modal-body label:first-child { margin-top: 0; }
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
+
+        /* 修复：导入数据弹窗按钮尺寸不一致 */
+        /* 问题："全部恢复" 复用了 .btn-start，会被全局图标按钮样式固定为 50x50 */
+        /* 解决：仅在 #importModal 内重置两个按钮为统一尺寸，确保与"清空记录"一致 */
+        #importModal .modal-footer button {
+            width: 112px;
+            height: 42px;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+        }
 
         /* 加载遮罩层样式 */
         #loadingOverlay {
@@ -719,6 +792,18 @@
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
         }
+        .loading-text {
+            font-weight: 600;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #manualSaveMsg {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 1200px) { .main-layout { flex-wrap: wrap; } .left-section, .plan-section-container, .middle-section, .right-section { flex: 1 1 45%; } }
@@ -737,25 +822,88 @@
 <body>
     <div id="loadingOverlay">
         <div class="loading-spinner"></div>
-        <div style="font-weight: 600; font-size: 18px;">☁️ 正在从云端同步数据...</div>
+        <div class="loading-text">
+            <svg class="icon-lucide icon-lucide-lg" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/>
+                <path d="M8 16h8"/>
+            </svg>
+            <span>正在从云端同步数据...</span>
+        </div>
     </div>
 
     <div class="container">
-        <h1>🏃‍♂️‍➡️ 吾生有涯，不负韶华 🧘‍♂</h1>
+        <h1>
+            <svg class="icon-lucide title-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M13 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z"/>
+                <path d="M8 14l3-3 2 2 3-1"/>
+                <path d="M6 20l3-4"/>
+                <path d="M13 13l-1 7"/>
+                <path d="M16 20l2-4"/>
+            </svg>
+            吾生有涯，不负韶华
+            <svg class="icon-lucide title-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 4c2.4 2 3.5 4.2 3.5 6.6 0 2.2-1.2 4.1-3.5 5.4-2.3-1.3-3.5-3.2-3.5-5.4C8.5 8.2 9.6 6 12 4Z"/>
+                <path d="M8 18h8"/>
+                <path d="M10 21h4"/>
+            </svg>
+        </h1>
         
         <div class="file-controls">
-            <button class="btn-theme" onclick="toggleTheme()" title="切换主题">🌓</button>
+            <button class="btn-theme" onclick="toggleTheme()" title="切换主题" id="themeToggleBtn">
+                <!-- 优化：默认使用 moon 图标，进入暗色模式时切换为 sun 图标 -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
 
-            <label for="fileInput" class="btn-data">📂 数据加载</label>
+            <label for="fileInput" class="btn-data">
+                <!-- 修复：使用 SVG 替代 emoji，避免图标在部分设备上变形 -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M3 7.5C3 6.12 4.12 5 5.5 5H9L11 7H18.5C19.88 7 21 8.12 21 9.5V16.5C21 17.88 19.88 19 18.5 19H5.5C4.12 19 3 17.88 3 16.5V7.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M3 10H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <span>数据加载</span>
+            </label>
             <input type="file" id="fileInput" accept=".json" onchange="loadFromFile(event)">
             
-            <button class="btn-data" onclick="handleLocalBackupClick()">💾 本地备份</button>
+            <button class="btn-data" onclick="handleLocalBackupClick()">
+                <!-- 优化：本地备份按钮也统一为 SVG 图标，保持视觉一致 -->
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M5 4H16L19 7V20H5V4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M8 4V10H16V4" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M9 16H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <span>本地备份</span>
+            </button>
 
-            <button class="btn-fitness" onclick="window.open('https://liumaodou.xyz/vigor-tracker/', '_blank')">💰 以终为始</button>
-            
-            <button class="btn-daily-review" style="margin-left: 10px;" onclick="openDailyReviewModal()">📅 今日复盘</button>
-            
-            <button class="btn-finish" onclick="finishToday()">🎉 今日结束</button>
+            <button class="btn-fitness" onclick="window.open('https://liumaodou.xyz/vigor-tracker/', '_blank')">
+                <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true">
+                    <line x1="12" y1="1" x2="12" y2="23"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14.5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                <span>以终为始</span>
+            </button>
+
+            <button class="btn-daily-review" style="margin-left: 10px;" onclick="openDailyReviewModal()">
+                <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>今日复盘</span>
+            </button>
+
+            <button class="btn-finish" onclick="finishToday()">
+                <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M8 21h8"/>
+                    <path d="M12 17v4"/>
+                    <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/>
+                    <path d="M5 6H3a2 2 0 0 0 2 2"/>
+                    <path d="M19 6h2a2 2 0 0 1-2 2"/>
+                </svg>
+                <span>今日结束</span>
+            </button>
             
             <div id="sysClock" class="clock-display">00:00:00</div>
 
@@ -768,7 +916,13 @@
         <div class="main-layout">
             <div class="left-section">
                 <div class="records">
-                    <h2 class="section-title">⌚ 今日足迹</h2>
+                    <h2 class="section-title">
+                        <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>今日足迹</span>
+                    </h2>
                     <div class="task-input-section">
                         <input type="text" id="taskInput" placeholder="准备开始什么任务？...">
                         <div class="task-buttons-row">
@@ -800,8 +954,14 @@
                         <div class="timer" id="timer">00:00:00</div>
                         <textarea id="currentTaskDescInput" placeholder="在此记录任务备注、灵感或进展..." style="margin-top: 15px; height: 80px; font-size: 14px; resize: vertical;" oninput="updateLocalDesc(this.value)"></textarea>
                         <div style="text-align: right; margin-top: 10px;">
-                            <span id="manualSaveMsg" style="font-size: 12px; color: var(--success-color); margin-right: 10px; opacity: 0; transition: opacity 0.5s;">✅ 已同步</span>
-                            <button class="btn-small btn-start" onclick="saveCurrentTaskDesc()">💾 保存备注</button>
+                            <span id="manualSaveMsg" style="font-size: 12px; color: var(--success-color); margin-right: 10px; opacity: 0; transition: opacity 0.5s;">
+                                <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                                已同步
+                            </span>
+                            <button class="btn-small btn-save-note" onclick="saveCurrentTaskDesc()">
+                                <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4H16L19 7V20H5V4Z"/><path d="M8 4V10H16V4"/><path d="M9 16H15"/></svg>
+                                <span>保存备注</span>
+                            </button>
                         </div>
                     </div>
                     <div id="recordsList"><div class="no-records">今天还没有开始记录，加油！</div></div>
@@ -811,7 +971,13 @@
             <div class="plan-section-container">
                 <div class="plan-section">
                     <h2 class="section-title">
-                        🗓️ 今日规划 
+                        <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span>今日规划</span>
                         <button class="btn-add-icon" onclick="openAddPlanModal()" title="添加规划">+</button>
                     </h2>
                     <div id="planList"><div class="no-records">暂无规划</div></div>
@@ -821,7 +987,15 @@
             <div class="middle-section">
                 <div class="todo-section">
                     <h2 class="section-title">
-                        📝 待办清单 
+                        <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true">
+                            <line x1="8" y1="6" x2="21" y2="6"/>
+                            <line x1="8" y1="12" x2="21" y2="12"/>
+                            <line x1="8" y1="18" x2="21" y2="18"/>
+                            <line x1="3" y1="6" x2="3.01" y2="6"/>
+                            <line x1="3" y1="12" x2="3.01" y2="12"/>
+                            <line x1="3" y1="18" x2="3.01" y2="18"/>
+                        </svg>
+                        <span>待办清单</span>
                         <button class="btn-add-icon" onclick="openAddTodoModal()" title="添加待办">+</button>
                     </h2>
                     <div id="todoList"><div class="no-records">暂无待办</div></div>
@@ -831,7 +1005,12 @@
             <div class="right-section">
                 <div class="question-section">
                     <h2 class="section-title">
-                        💡 灵感洞察 
+                        <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M9 18h6"/>
+                            <path d="M10 22h4"/>
+                            <path d="M12 2a7 7 0 0 0-4 12.74c.5.37 1 .9 1.2 1.46L9.5 17h5l.3-.8c.2-.56.7-1.09 1.2-1.46A7 7 0 0 0 12 2Z"/>
+                        </svg>
+                        <span>灵感洞察</span>
                         <button class="btn-add-icon" onclick="openAddQuestionModal()" title="记录灵感">+</button>
                     </h2>
                     <div id="questionList"><div class="no-records">静候灵感降临...</div></div>
@@ -842,7 +1021,7 @@
 
     <div id="addPlanModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header"><h2>🗓️ 添加今日规划</h2><span class="close" onclick="closeAddPlanModal()">&times;</span></div>
+            <div class="modal-header"><h2><svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>添加今日规划</span></h2><span class="close" onclick="closeAddPlanModal()">&times;</span></div>
             <div class="modal-body">
                 <label>规划内容：</label>
                 <input type="text" id="planInput" placeholder="输入今日规划...">
@@ -856,7 +1035,7 @@
 
     <div id="addTodoModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header"><h2>📝 添加待办事项</h2><span class="close" onclick="closeAddTodoModal()">&times;</span></div>
+            <div class="modal-header"><h2><svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>添加待办事项</span></h2><span class="close" onclick="closeAddTodoModal()">&times;</span></div>
             <div class="modal-body">
                 <label>待办内容：</label><input type="text" id="todoInput" placeholder="输入待办事项...">
                 <label>所属项目：</label><input type="text" id="todoProjectInput" placeholder="所属项目 (如:工作)...">
@@ -872,7 +1051,7 @@
 
     <div id="addQuestionModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header"><h2>💡 记录灵感</h2><span class="close" onclick="closeAddQuestionModal()">&times;</span></div>
+            <div class="modal-header"><h2><svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.74c.5.37 1 .9 1.2 1.46L9.5 17h5l.3-.8c.2-.56.7-1.09 1.2-1.46A7 7 0 0 0 12 2Z"/></svg><span>记录灵感</span></h2><span class="close" onclick="closeAddQuestionModal()">&times;</span></div>
             <div class="modal-body">
                 <label>灵感内容：</label>
                 <input type="text" id="questionInput" placeholder="捕捉闪念、问题...">
@@ -886,7 +1065,7 @@
 
     <div id="todoEditModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header"><h2>✏️ 编辑待办</h2><span class="close" onclick="closeTodoEditModal()">&times;</span></div>
+            <div class="modal-header"><h2><svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg><span>编辑待办</span></h2><span class="close" onclick="closeTodoEditModal()">&times;</span></div>
             <div class="modal-body">
                 <label>待办内容：</label><input type="text" id="editTodoText">
                 <label>所属项目：</label><input type="text" id="editTodoProject" placeholder="例如：工作、生活、学习">
@@ -899,7 +1078,7 @@
 
     <div id="answerModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header"><h2>💡 深度思考</h2><span class="close" onclick="closeAnswerModal()">&times;</span></div>
+            <div class="modal-header"><h2><svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.74c.5.37 1 .9 1.2 1.46L9.5 17h5l.3-.8c.2-.56.7-1.09 1.2-1.46A7 7 0 0 0 12 2Z"/></svg><span>深度思考</span></h2><span class="close" onclick="closeAnswerModal()">&times;</span></div>
             <div class="modal-body">
                 <label>原始内容：</label><p id="modalQuestionText" style="margin-bottom: 20px; color: var(--text-main); font-weight: 500; font-size: 16px; padding: 10px; background: var(--bg-section); border-radius: 8px;"></p>
                 <label>洞察/解决方案：</label><textarea id="answerInput" placeholder="在这里深化您的思考..."></textarea>
@@ -910,7 +1089,7 @@
 
     <div id="descModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header"><h2>📝 任务复盘</h2><span class="close" onclick="closeDescModal()">&times;</span></div>
+            <div class="modal-header"><h2><svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>任务复盘</span></h2><span class="close" onclick="closeDescModal()">&times;</span></div>
             <div class="modal-body">
                 <label>任务名称：</label><p id="modalRecordTask" style="margin-bottom: 20px; font-weight: 600; font-size: 16px; color: var(--text-main);"></p>
                 <label>补充描述/复盘：</label><textarea id="descInput" placeholder="记录这个任务的完成情况..."></textarea>
@@ -925,7 +1104,7 @@
 
     <div id="planDescModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header"><h2>📅 规划详情</h2><span class="close" onclick="closePlanDescModal()">&times;</span></div>
+            <div class="modal-header"><h2><svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>规划详情</span></h2><span class="close" onclick="closePlanDescModal()">&times;</span></div>
             <div class="modal-body">
                 <label>规划内容：</label><input type="text" id="editPlanContent">
                 <label>备注/描述：</label><textarea id="editPlanDesc" placeholder="为该规划添加备注信息..."></textarea>
@@ -939,7 +1118,7 @@
 
     <div id="dailyReviewModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header"><h2>📅 今日复盘</h2><span class="close" onclick="closeDailyReviewModal()">&times;</span></div>
+            <div class="modal-header"><h2><svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>今日复盘</span></h2><span class="close" onclick="closeDailyReviewModal()">&times;</span></div>
             <div class="modal-body">
                 <label>今日总结：</label>
                 <textarea id="dailyReviewInput" placeholder="回顾今天的工作，写下你的成就、反思和改进计划..." style="height: 200px; padding: 15px; font-size: 15px;"></textarea>
@@ -953,7 +1132,7 @@
 
     <div id="importModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header"><h2>📥 导入数据确认</h2><span class="close" onclick="closeImportModal()">&times;</span></div>
+            <div class="modal-header"><h2><svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span>导入数据确认</span></h2><span class="close" onclick="closeImportModal()">&times;</span></div>
             <div class="modal-body">
                 <p style="color: var(--text-main);">您希望如何处理数据？</p>
                 <div style="background: var(--bg-section); padding: 15px; border-radius: 8px; font-size: 14px; color: var(--text-sub);">
@@ -997,12 +1176,36 @@
             };
         }
 
+        // 主题切换图标更新函数
+        // 功能：根据当前主题在按钮中切换 Lucide 风格 moon/sun 图标
+        // 亮色模式：显示 moon（提示可切换到暗色）
+        // 暗色模式：显示 sun（提示可切换到亮色）
+        function updateThemeButtonIcon() {
+            const btn = document.getElementById('themeToggleBtn');
+            if (!btn) return;
+
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                btn.innerHTML = `<svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>`;
+            } else {
+                btn.innerHTML = `<svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>`;
+            }
+        }
+
         // 主题切换逻辑
         window.toggleTheme = function() {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
+
+            // 切换后立即刷新主题图标
+            updateThemeButtonIcon();
         }
 
         // 修复：将 triggerSync 改为异步函数，确保数据完全保存到云端后再继续执行
@@ -1057,6 +1260,9 @@
             if (savedTheme) {
                 document.documentElement.setAttribute('data-theme', savedTheme);
             }
+
+            // 初始化主题按钮图标（根据当前主题显示 sun/moon）
+            updateThemeButtonIcon();
 
             refreshAllUI();
             updateSystemTime();
