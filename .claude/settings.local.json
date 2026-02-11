@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"/Users/liujiannan/2026/time-tracker-cloud\" diff:*)",
+      "Bash(supabase:*)",
+      "Bash(npm --version)",
+      "Bash(brew:*)",
+      "Bash(npm install:*)",
+      "Bash(SUPABASE_ACCESS_TOKEN=\"sbp_18acd48c13c2896ae3fd21787dba994593255122\" supabase secrets set:*)",
+      "Bash(SUPABASE_ACCESS_TOKEN=\"sbp_18acd48c13c2896ae3fd21787dba994593255122\" supabase functions deploy:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}

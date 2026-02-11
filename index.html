@@ -292,6 +292,19 @@
             box-shadow: 0 4px 6px rgba(66, 153, 225, 0.25);
         }
 
+        /* 2.5 AI 助手按钮样式 */
+        .btn-ai {
+            background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+            color: white;
+            box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+            gap: 6px;
+        }
+        .btn-ai:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 10px rgba(99, 102, 241, 0.35);
+            filter: brightness(1.03);
+        }
+
         /* 3. 今日复盘按钮 */
         .btn-daily-review {
             background: var(--btn-review-bg); 
@@ -461,6 +474,73 @@
         .btn-save-note:hover {
             background: #38a169;
             transform: translateY(-1px);
+        }
+
+        /* AI 聊天窗口样式 */
+        /* 目标：将 AI 功能改为传统聊天模式，降低操作复杂度 */
+        .ai-chat-container { margin-top: 4px; }
+        .ai-chat-messages {
+            min-height: 260px;
+            max-height: 360px;
+            overflow-y: auto;
+            padding: 12px;
+            background: var(--bg-section);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+        .ai-chat-empty {
+            color: var(--text-sub);
+            font-size: 13px;
+            text-align: center;
+            padding: 24px 8px;
+            line-height: 1.6;
+        }
+        .ai-chat-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .ai-chat-row.user { justify-content: flex-end; }
+        .ai-chat-row.assistant { justify-content: flex-start; }
+        .ai-chat-bubble {
+            max-width: 82%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .ai-chat-row.user .ai-chat-bubble {
+            background: var(--primary-color);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+        .ai-chat-row.assistant .ai-chat-bubble {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+        /* AI 思考中的占位气泡 */
+        .ai-chat-bubble.thinking {
+            color: var(--text-sub);
+            font-style: italic;
+            opacity: 0.9;
+        }
+        .ai-chat-input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            align-items: flex-end;
+        }
+        .ai-chat-input-row textarea {
+            min-height: 72px;
+            max-height: 160px;
+            resize: vertical;
+        }
+        .ai-chat-input-row button {
+            height: 42px;
+            flex-shrink: 0;
         }
         
         .btn-save-modal { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); }
@@ -876,6 +956,21 @@
                 <span>本地备份</span>
             </button>
 
+            <button class="btn-ai" onclick="openAiModal()">
+                <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 2v4"/>
+                    <path d="M12 18v4"/>
+                    <path d="M4.93 4.93l2.83 2.83"/>
+                    <path d="M16.24 16.24l2.83 2.83"/>
+                    <path d="M2 12h4"/>
+                    <path d="M18 12h4"/>
+                    <path d="M4.93 19.07l2.83-2.83"/>
+                    <path d="M16.24 7.76l2.83-2.83"/>
+                    <circle cx="12" cy="12" r="3.5"/>
+                </svg>
+                <span>AI 助手</span>
+            </button>
+
             <button class="btn-fitness" onclick="window.open('https://liumaodou.xyz/vigor-tracker/', '_blank')">
                 <svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true">
                     <line x1="12" y1="1" x2="12" y2="23"/>
@@ -1143,6 +1238,25 @@
         </div>
     </div>
 
+    <div id="aiModal" class="modal">
+        <div class="modal-content" style="max-width: 760px;">
+            <div class="modal-header"><h2><svg class="icon-lucide icon-lucide-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="3.5"/></svg><span>AI 聊天助手</span></h2><span class="close" onclick="closeAiModal()">&times;</span></div>
+            <div class="modal-body ai-chat-container">
+                <!-- 简化：按需求移除默认提示文案，初始保持空白聊天区域 -->
+                <div id="aiChatMessages" class="ai-chat-messages"></div>
+
+                <div class="ai-chat-input-row">
+                    <textarea id="aiPromptInput" placeholder="例如：1) 总结今天记录 2) 把今天到期的待办前面加【紧急】" aria-label="AI 输入"></textarea>
+                    <button class="btn-data" id="aiSendBtn" onclick="sendAiMessage()">发送</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save-modal" onclick="clearAiChat()">清空对话</button>
+                <button class="btn-save-modal" onclick="closeAiModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         window.currentTask = null;
         window.currentTaskDescription = ""; 
@@ -1160,8 +1274,12 @@
         
         let currentQuestionId = null;
         let currentRecordIndex = null;
-        let currentPlanEditId = null; 
+        let currentPlanEditId = null;
         let pendingImportData = null;
+
+        // AI 聊天上下文状态
+        // 功能：保存聊天消息历史，便于后续消息理解上下文
+        let aiChatHistory = [];
 
         // 待办事项折叠状态
         window.todoGroupStates = {};
@@ -1272,6 +1390,189 @@
         
         function updateSystemTime() {
             document.getElementById('sysClock').textContent = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+        }
+
+        // AI 助手弹窗控制
+        // 功能：打开/关闭聊天弹窗
+        window.openAiModal = function() {
+            const modal = document.getElementById('aiModal');
+            if (!modal) return;
+            modal.style.display = 'block';
+        }
+        window.closeAiModal = function() {
+            const modal = document.getElementById('aiModal');
+            if (!modal) return;
+            modal.style.display = 'none';
+        }
+
+        // AI 辅助函数：收集当前页面数据快照
+        // 用途：将 records/todos/questions/dailyPlans 等数据发送给 AI 做分析与操作
+        function collectAiContextData() {
+            return {
+                records: window.records || [],
+                todos: window.todos || [],
+                questions: window.questions || [],
+                dailyPlans: window.dailyPlans || [],
+                currentTask: window.currentTask || null,
+                currentTaskDescription: window.currentTaskDescription || "",
+                currentPlanId: window.currentPlanId || null,
+                currentTodoId: window.currentTodoId || null,
+                startTime: window.startTime || null,
+                pausedTime: window.pausedTime || 0,
+                isPaused: !!window.isPaused
+            };
+        }
+
+        // AI 聊天渲染函数
+        // 目标：把用户与 AI 的消息按传统 chat 气泡方式展示
+        function appendAiMessage(role, text) {
+            const box = document.getElementById('aiChatMessages');
+            if (!box) return;
+
+            const empty = box.querySelector('.ai-chat-empty');
+            if (empty) empty.remove();
+
+            const row = document.createElement('div');
+            row.className = `ai-chat-row ${role}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'ai-chat-bubble';
+            bubble.textContent = text;
+
+            row.appendChild(bubble);
+            box.appendChild(row);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // AI 思考占位渲染
+        // 作用：发送后先展示“AI 正在思考...”，拿到结果后替换为真实回复
+        function appendAiThinking() {
+            const box = document.getElementById('aiChatMessages');
+            if (!box) return null;
+
+            const row = document.createElement('div');
+            row.className = 'ai-chat-row assistant';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'ai-chat-bubble thinking';
+            bubble.textContent = 'AI 正在思考...';
+
+            row.appendChild(bubble);
+            box.appendChild(row);
+            box.scrollTop = box.scrollHeight;
+            return bubble;
+        }
+
+        // 清空 AI 聊天
+        // 功能：清空界面消息和上下文历史，回到初始状态
+        window.clearAiChat = function() {
+            aiChatHistory = [];
+            const box = document.getElementById('aiChatMessages');
+            if (!box) return;
+
+            // 简化：清空后不再显示默认引导文案
+            box.innerHTML = '';
+        }
+
+        // 发送 AI 消息（传统 chat 模式）
+        // 行为：用户发送 -> AI 回复；若 AI 返回 patch，则自动应用并同步，再回消息确认
+        window.sendAiMessage = async function() {
+            const input = document.getElementById('aiPromptInput');
+            const sendBtn = document.getElementById('aiSendBtn');
+            if (!input || !sendBtn) return;
+
+            const userPrompt = (input.value || '').trim();
+            if (!userPrompt) return;
+
+            // 1. 先渲染用户消息
+            appendAiMessage('user', userPrompt);
+            aiChatHistory.push({ role: 'user', content: userPrompt });
+            input.value = '';
+
+            // 2. 锁定发送按钮并显示 AI 思考占位，保证用户始终看到反馈
+            sendBtn.disabled = true;
+            const thinkingBubble = appendAiThinking();
+
+            try {
+                // 3. 构造请求，附带历史与当前数据上下文
+                const aiRequestBody = {
+                    instruction: userPrompt,
+                    context: collectAiContextData(),
+                    history: aiChatHistory,
+                    requirePatchFormat: true
+                };
+
+                const functionBaseUrl = window.__supabaseUrl;
+                const functionAnonKey = window.__supabaseAnonKey;
+                if (!functionBaseUrl || !functionAnonKey) {
+                    throw new Error('Supabase 配置未就绪，请刷新页面后重试。');
+                }
+
+                const response = await fetch(`${functionBaseUrl}/functions/v1/ai-assistant`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': functionAnonKey,
+                        'Authorization': `Bearer ${functionAnonKey}`
+                    },
+                    body: JSON.stringify(aiRequestBody)
+                });
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`AI 服务调用失败 (${response.status}): ${text}`);
+                }
+
+                const data = await response.json();
+                const message = data?.message || 'AI 已完成，但未返回文本。';
+
+                // 4. 用真实回复替换“思考中”占位
+                if (thinkingBubble) {
+                    thinkingBubble.classList.remove('thinking');
+                    thinkingBubble.textContent = message;
+                } else {
+                    appendAiMessage('assistant', message);
+                }
+                aiChatHistory.push({ role: 'assistant', content: message });
+
+                // 5. 如果返回 patch，自动应用并同步（chat 模式下不再额外点击确认）
+                if (data?.mode === 'preview_patch' && data?.patch && typeof data.patch === 'object') {
+                    const patch = data.patch;
+
+                    // 白名单写入：只允许核心字段
+                    if (Array.isArray(patch.records)) window.records = patch.records;
+                    if (Array.isArray(patch.todos)) window.todos = patch.todos;
+                    if (Array.isArray(patch.questions)) window.questions = patch.questions;
+                    if (Array.isArray(patch.dailyPlans)) window.dailyPlans = patch.dailyPlans;
+                    if (typeof patch.currentTask === 'string' || patch.currentTask === null) window.currentTask = patch.currentTask;
+                    if (typeof patch.currentTaskDescription === 'string') window.currentTaskDescription = patch.currentTaskDescription;
+                    if (typeof patch.currentPlanId === 'number' || patch.currentPlanId === null) window.currentPlanId = patch.currentPlanId;
+                    if (typeof patch.currentTodoId === 'number' || patch.currentTodoId === null) window.currentTodoId = patch.currentTodoId;
+                    if (typeof patch.startTime === 'number' || patch.startTime === null) window.startTime = patch.startTime;
+                    if (typeof patch.pausedTime === 'number') window.pausedTime = patch.pausedTime;
+                    if (typeof patch.isPaused === 'boolean') window.isPaused = patch.isPaused;
+
+                    refreshAllUI();
+                    await triggerSync();
+
+                    const doneMsg = '✅ 已按你的指令完成数据更新并同步。';
+                    appendAiMessage('assistant', doneMsg);
+                    aiChatHistory.push({ role: 'assistant', content: doneMsg });
+                }
+            } catch (err) {
+                const errMsg = `AI 调用失败：${err.message}`;
+
+                // 出错时也替换占位，避免界面看起来无响应
+                if (thinkingBubble) {
+                    thinkingBubble.classList.remove('thinking');
+                    thinkingBubble.textContent = errMsg;
+                } else {
+                    appendAiMessage('assistant', errMsg);
+                }
+                aiChatHistory.push({ role: 'assistant', content: errMsg });
+            } finally {
+                sendBtn.disabled = false;
+            }
         }
 
         function toSafeISO(val) {
@@ -2083,14 +2384,27 @@
             const dateStr = new Date().toISOString().slice(0,10);
             XLSX.writeFile(wb, `Report_${dateStr}.xlsx`);
         }
-        window.onclick = e => { if(e.target.classList.contains('modal')) e.target.style.display = 'none'; }
+        // 统一弹窗点击空白关闭行为
+        // 额外处理：如果是 AI 弹窗，不清空聊天内容，只关闭窗口
+        window.onclick = e => {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        }
     </script>
 
     <script type="module">
       import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
+      // 安全说明：禁止在前端直接放 LLM API_KEY
+      // 正确做法：前端只调用 Supabase Edge Function，真正的 AI 密钥放到 Function Secrets
+
       const SUPABASE_URL = "https://ynkxpjmpazmjdjtwpggq.supabase.co";
       const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlua3hwam1wYXptamRqdHdwZ2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5MjExODEsImV4cCI6MjA4MjQ5NzE4MX0.WHgycb5URS_bzsO6WAgHHrDRAMVKOrnDhTlX7ELvo4w";
+
+      // 提供给普通脚本使用的全局配置（AI 模块通过它调用 Edge Function）
+      window.__supabaseUrl = SUPABASE_URL;
+      window.__supabaseAnonKey = SUPABASE_KEY;
       
       const TABLE_NAME = "time_tracker_cloud";
       const ROW_ID = "my_daily_data"; 
