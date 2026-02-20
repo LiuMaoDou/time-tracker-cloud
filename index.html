@@ -907,7 +907,25 @@
             .file-controls { flex-direction: column; align-items: stretch; }
 
             /* 移动端适配 */
-            .file-controls .btn-finish, .file-controls .btn-daily-review, .file-controls .btn-theme, .file-controls .btn-fitness { margin-left: 0; margin-top: 10px; }
+            /* 统一顶部功能按钮尺寸：覆盖内联样式和各类按钮默认间距，保证手机端视觉一致 */
+            .file-controls .btn-theme,
+            .file-controls .btn-data,
+            .file-controls .btn-ai,
+            .file-controls .btn-fitness,
+            .file-controls .btn-daily-review,
+            .file-controls .btn-finish {
+                width: 100%;
+                min-height: 42px;
+                margin: 0 !important;
+                justify-content: center;
+            }
+
+            /* 主题按钮在移动端改为统一文本按钮高度，避免图标按钮显得偏小 */
+            .file-controls .btn-theme {
+                min-width: 0;
+                padding: 10px 20px;
+            }
+
             .clock-display { margin-left: 0; margin-top: 10px; justify-content: center; }
             .auto-save-status { justify-content: center; margin-top: 10px; margin-left: 0; }
 
