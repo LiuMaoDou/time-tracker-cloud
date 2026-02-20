@@ -903,7 +903,29 @@
 
         @media (max-width: 1200px) { .main-layout { flex-wrap: wrap; } .left-section, .plan-section-container, .middle-section, .right-section { flex: 1 1 45%; } }
         @media (max-width: 768px) {
-            .container { padding: 20px; }
+            /* 移动端去除外层渐变背景与大边距，腾出更多可用空间 */
+            body {
+                padding: 0;
+                background: var(--bg-section);
+            }
+
+            /* 移动端容器去卡片化：取消圆角/阴影/边框，扩大内容区域 */
+            .container {
+                max-width: none;
+                padding: 12px;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+                background: transparent;
+                backdrop-filter: none;
+            }
+
+            /* 移动端标题缩小：减少主标题占用高度，提升可视空间 */
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 16px;
+            }
+
             .file-controls { flex-direction: column; align-items: stretch; }
 
             /* 移动端适配 */
@@ -2200,19 +2222,31 @@
         }
 
         function startTask() {
-            const val = document.getElementById('taskInput').value.trim();
-            if (!val) { alert('请输入任务名称！'); return; }
+            const taskInputEl = document.getElementById('taskInput');
+            let val = taskInputEl.value.trim();
+
+            // 优化：若用户直接点击开始且未填写任务名，则自动使用“月-日-时-分”作为默认标题
+            if (!val) {
+                const now = new Date();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hour = String(now.getHours()).padStart(2, '0');
+                const minute = String(now.getMinutes()).padStart(2, '0');
+                val = `${month}-${day}-${hour}-${minute}`;
+                taskInputEl.value = val;
+            }
+
             window.currentTask = val;
-            window.currentTaskDescription = ""; 
+            window.currentTaskDescription = "";
             window.startTime = Date.now() - window.pausedTime;
             window.isPaused = false;
             updateTimerUI(true);
             window.timerInterval = setInterval(updateTimer, 1000);
-            
+
             const descInput = document.getElementById('currentTaskDescInput');
             if (descInput) descInput.value = "";
-            
-            triggerSync(); 
+
+            triggerSync();
         }
 
         // 修改：这里只更新本地变量，不触发同步
