@@ -902,15 +902,98 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 1200px) { .main-layout { flex-wrap: wrap; } .left-section, .plan-section-container, .middle-section, .right-section { flex: 1 1 45%; } }
-        @media (max-width: 768px) { 
-            .main-layout { flex-direction: column; } 
-            .container { padding: 20px; } 
-            .file-controls { flex-direction: column; align-items: stretch; } 
-            
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            .file-controls { flex-direction: column; align-items: stretch; }
+
             /* 移动端适配 */
-            .file-controls .btn-finish, .file-controls .btn-daily-review, .file-controls .btn-theme, .file-controls .btn-fitness { margin-left: 0; margin-top: 10px; } 
-            .clock-display { margin-left: 0; margin-top: 10px; justify-content: center; } 
-            .auto-save-status { justify-content: center; margin-top: 10px; margin-left: 0; } 
+            .file-controls .btn-finish, .file-controls .btn-daily-review, .file-controls .btn-theme, .file-controls .btn-fitness { margin-left: 0; margin-top: 10px; }
+            .clock-display { margin-left: 0; margin-top: 10px; justify-content: center; }
+            .auto-save-status { justify-content: center; margin-top: 10px; margin-left: 0; }
+
+            /* 移动端分页视口：隐藏溢出内容，仅展示当前模块页 */
+            .mobile-swiper-viewport {
+                overflow: hidden;
+                width: 100%;
+            }
+
+            /* 移动端横向分页轨道：一屏一个模块，通过 transform 切页 */
+            .main-layout {
+                flex-direction: row;
+                flex-wrap: nowrap;
+                gap: 0;
+                transition: transform 0.3s ease;
+                will-change: transform;
+                touch-action: pan-y;
+            }
+
+            /* 移动端分页项：四个模块都固定为整屏宽度 */
+            .left-section,
+            .plan-section-container,
+            .middle-section,
+            .right-section {
+                flex: 0 0 100%;
+                min-width: 100%;
+            }
+
+            /* 移动端导航区域：按钮和圆点只在手机端显示 */
+            .mobile-module-nav {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                margin-top: 14px;
+                padding: 10px 12px;
+                border-radius: var(--radius-sm);
+                border: 1px solid var(--border-color);
+                background: var(--bg-card);
+            }
+
+            .mobile-nav-btn {
+                padding: 8px 12px;
+                min-width: 72px;
+                font-size: 13px;
+                font-weight: 600;
+                border: 1px solid var(--border-color);
+                background: var(--bg-section);
+                color: var(--text-main);
+                box-shadow: none;
+            }
+
+            .mobile-nav-btn:disabled {
+                opacity: 0.45;
+            }
+
+            .mobile-module-dots {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                flex: 1;
+            }
+
+            .mobile-module-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                padding: 0;
+                border: 1px solid var(--border-color);
+                background: var(--bg-input);
+                box-shadow: none;
+                min-width: 10px;
+            }
+
+            .mobile-module-dot.active {
+                background: var(--primary-color);
+                border-color: var(--primary-color);
+            }
+        }
+
+        /* 桌面端隐藏移动分页导航，避免影响四列布局 */
+        @media (min-width: 769px) {
+            .mobile-module-nav {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -1011,7 +1094,9 @@
             </div>
         </div>
         
-        <div class="main-layout">
+        <!-- 移动端分页视口：仅在手机端启用横向切页，桌面端保持原有四列布局 -->
+        <div class="mobile-swiper-viewport" id="mobileSwiperViewport">
+            <div class="main-layout" id="mainLayout">
             <div class="left-section">
                 <div class="records">
                     <h2 class="section-title">
@@ -1114,6 +1199,19 @@
                     <div id="questionList"><div class="no-records">静候灵感降临...</div></div>
                 </div>
             </div>
+        </div>
+
+        <!-- 移动端分页导航：按钮 + 圆点双兜底，避免仅靠手势造成可用性问题 -->
+        <div class="mobile-module-nav" id="mobileModuleNav" aria-label="移动端模块导航">
+            <button type="button" class="mobile-nav-btn" id="mobilePrevBtn">上一页</button>
+            <div class="mobile-module-dots" id="mobileModuleDots" aria-label="模块分页圆点">
+                <button type="button" class="mobile-module-dot" data-index="0" aria-label="切换到今日足迹" title="今日足迹"></button>
+                <button type="button" class="mobile-module-dot" data-index="1" aria-label="切换到今日规划" title="今日规划"></button>
+                <button type="button" class="mobile-module-dot" data-index="2" aria-label="切换到待办清单" title="待办清单"></button>
+                <button type="button" class="mobile-module-dot" data-index="3" aria-label="切换到灵感洞察" title="灵感洞察"></button>
+            </div>
+            <button type="button" class="mobile-nav-btn" id="mobileNextBtn">下一页</button>
+        </div>
         </div>
     </div>
 
@@ -1347,6 +1445,225 @@
             window.triggerSync();
         }, 1000);
 
+        // 移动端四模块分页状态
+        // 说明：该状态仅用于展示层，不参与云端持久化。
+        const mobilePagerState = {
+            activeIndex: 0,
+            total: 4,
+            isMobile: false,
+            isInited: false,
+            touchStartX: 0,
+            touchStartY: 0,
+            deltaX: 0,
+            deltaY: 0,
+            lockAxis: null,
+            isTouching: false
+        };
+
+        // 移动端手势阈值常量
+        // 说明：先做轴锁，再做切页判定，减少纵向滚动时的误翻页。
+        const MOBILE_AXIS_LOCK_THRESHOLD = 12;
+        const MOBILE_SWIPE_THRESHOLD = 60;
+
+        // 获取移动分页相关 DOM 节点
+        // 说明：集中查询，避免各函数重复查 DOM。
+        function getMobilePagerElements() {
+            return {
+                viewport: document.getElementById('mobileSwiperViewport'),
+                layout: document.getElementById('mainLayout'),
+                prevBtn: document.getElementById('mobilePrevBtn'),
+                nextBtn: document.getElementById('mobileNextBtn'),
+                dots: Array.from(document.querySelectorAll('.mobile-module-dot'))
+            };
+        }
+
+        // 判断当前是否为移动端分页模式
+        function isMobilePagerViewport() {
+            return window.matchMedia('(max-width: 768px)').matches;
+        }
+
+        // 索引边界保护
+        // 说明：所有外部切页入口都经过 clamp，避免越界抖动。
+        function clampMobileModuleIndex(index) {
+            return Math.max(0, Math.min(mobilePagerState.total - 1, index));
+        }
+
+        // 重置手势临时状态
+        function resetMobileTouchState() {
+            mobilePagerState.touchStartX = 0;
+            mobilePagerState.touchStartY = 0;
+            mobilePagerState.deltaX = 0;
+            mobilePagerState.deltaY = 0;
+            mobilePagerState.lockAxis = null;
+            mobilePagerState.isTouching = false;
+        }
+
+        // 判断是否有弹窗处于打开状态
+        // 说明：弹窗打开期间禁用翻页手势，避免交互冲突。
+        function hasVisibleModal() {
+            return Array.from(document.querySelectorAll('.modal')).some(modal => modal.style.display === 'block');
+        }
+
+        // 判断触摸目标是否应豁免切页
+        // 说明：输入控件和按钮区域不触发翻页，避免编辑时误翻页。
+        function shouldIgnoreSwipeTarget(target) {
+            if (!target) return false;
+            return !!target.closest('input, textarea, button, select, option, label, a, [contenteditable="true"], .mobile-module-nav, .modal-content');
+        }
+
+        // 更新移动端导航状态（按钮禁用态 + 圆点高亮）
+        function updateMobilePagerNav(index) {
+            const { prevBtn, nextBtn, dots } = getMobilePagerElements();
+            if (prevBtn) prevBtn.disabled = index <= 0;
+            if (nextBtn) nextBtn.disabled = index >= mobilePagerState.total - 1;
+
+            dots.forEach((dot, dotIndex) => {
+                const isActive = dotIndex === index;
+                dot.classList.toggle('active', isActive);
+                dot.setAttribute('aria-current', isActive ? 'true' : 'false');
+            });
+        }
+
+        // 核心切页函数
+        // 步骤：索引裁剪 -> 更新状态 -> 更新轨道 transform -> 同步导航 UI。
+        function setMobileModule(index) {
+            const safeIndex = clampMobileModuleIndex(index);
+            const { layout } = getMobilePagerElements();
+
+            mobilePagerState.activeIndex = safeIndex;
+
+            if (layout) {
+                if (mobilePagerState.isMobile) {
+                    layout.style.transform = `translateX(-${safeIndex * 100}%)`;
+                } else {
+                    // 桌面端强制清理 transform，防止移动端残留位移。
+                    layout.style.transform = '';
+                }
+            }
+
+            updateMobilePagerNav(safeIndex);
+        }
+
+        // 同步移动/桌面模式
+        // 说明：在 resize / matchMedia 变化时清理或恢复分页位移。
+        function syncMobilePagerMode() {
+            mobilePagerState.isMobile = isMobilePagerViewport();
+
+            if (!mobilePagerState.isMobile) {
+                resetMobileTouchState();
+            }
+
+            setMobileModule(mobilePagerState.activeIndex);
+        }
+
+        // 手势开始：记录起点并等待轴锁判断
+        function handleMobileTouchStart(event) {
+            if (!mobilePagerState.isMobile) return;
+            if (hasVisibleModal()) return;
+            if (shouldIgnoreSwipeTarget(event.target)) return;
+
+            const touch = event.touches && event.touches[0];
+            if (!touch) return;
+
+            mobilePagerState.touchStartX = touch.clientX;
+            mobilePagerState.touchStartY = touch.clientY;
+            mobilePagerState.deltaX = 0;
+            mobilePagerState.deltaY = 0;
+            mobilePagerState.lockAxis = null;
+            mobilePagerState.isTouching = true;
+        }
+
+        // 手势移动：先轴锁，再在横向锁定时阻止默认滚动
+        function handleMobileTouchMove(event) {
+            if (!mobilePagerState.isTouching || !mobilePagerState.isMobile) return;
+
+            const touch = event.touches && event.touches[0];
+            if (!touch) return;
+
+            mobilePagerState.deltaX = touch.clientX - mobilePagerState.touchStartX;
+            mobilePagerState.deltaY = touch.clientY - mobilePagerState.touchStartY;
+
+            const absX = Math.abs(mobilePagerState.deltaX);
+            const absY = Math.abs(mobilePagerState.deltaY);
+
+            if (!mobilePagerState.lockAxis) {
+                if (absX < MOBILE_AXIS_LOCK_THRESHOLD && absY < MOBILE_AXIS_LOCK_THRESHOLD) return;
+                mobilePagerState.lockAxis = absX > absY ? 'x' : 'y';
+            }
+
+            if (mobilePagerState.lockAxis === 'x') {
+                event.preventDefault();
+            }
+        }
+
+        // 手势结束：横向且超过阈值时执行切页
+        function handleMobileTouchEnd() {
+            if (!mobilePagerState.isTouching) return;
+
+            const absX = Math.abs(mobilePagerState.deltaX);
+            const absY = Math.abs(mobilePagerState.deltaY);
+
+            if (mobilePagerState.lockAxis === 'x' && absX >= MOBILE_SWIPE_THRESHOLD && absX > absY) {
+                if (mobilePagerState.deltaX < 0) {
+                    setMobileModule(mobilePagerState.activeIndex + 1);
+                } else {
+                    setMobileModule(mobilePagerState.activeIndex - 1);
+                }
+            }
+
+            resetMobileTouchState();
+        }
+
+        // 初始化移动端分页交互
+        // 步骤：绑定按钮/圆点 -> 绑定手势 -> 监听尺寸变化 -> 同步初始分页状态。
+        function initMobileModulePager() {
+            const { viewport, prevBtn, nextBtn, dots } = getMobilePagerElements();
+            if (!viewport) return;
+
+            mobilePagerState.total = dots.length || 4;
+
+            if (!mobilePagerState.isInited) {
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', () => {
+                        setMobileModule(mobilePagerState.activeIndex - 1);
+                    });
+                }
+
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => {
+                        setMobileModule(mobilePagerState.activeIndex + 1);
+                    });
+                }
+
+                dots.forEach(dot => {
+                    dot.addEventListener('click', () => {
+                        const dotIndex = Number(dot.dataset.index);
+                        if (Number.isNaN(dotIndex)) return;
+                        setMobileModule(dotIndex);
+                    });
+                });
+
+                viewport.addEventListener('touchstart', handleMobileTouchStart, { passive: true });
+                viewport.addEventListener('touchmove', handleMobileTouchMove, { passive: false });
+                viewport.addEventListener('touchend', handleMobileTouchEnd, { passive: true });
+                viewport.addEventListener('touchcancel', handleMobileTouchEnd, { passive: true });
+
+                window.addEventListener('resize', syncMobilePagerMode);
+
+                const mobileQuery = window.matchMedia('(max-width: 768px)');
+                if (mobileQuery.addEventListener) {
+                    mobileQuery.addEventListener('change', syncMobilePagerMode);
+                } else if (mobileQuery.addListener) {
+                    // 兼容旧浏览器：保留 addListener 分支。
+                    mobileQuery.addListener(syncMobilePagerMode);
+                }
+
+                mobilePagerState.isInited = true;
+            }
+
+            syncMobilePagerMode();
+        }
+
         // 优化：暂停按钮图标切换辅助函数
         // 功能：根据暂停状态动态切换按钮图标和提示文字
         // 暂停状态：显示"播放"图标（继续执行）
@@ -1374,7 +1691,10 @@
             updateRecordsList();
             updateTodoList();
             updateQuestionList();
-            updatePlanList(); 
+            updatePlanList();
+
+            // 说明：每次列表刷新后同步移动分页展示状态，确保切页导航与布局一致。
+            initMobileModulePager();
         }
 
         window.addEventListener('DOMContentLoaded', () => {
