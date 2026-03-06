@@ -2627,6 +2627,16 @@
             const sendBtn = document.getElementById('aiSendBtn');
             if (!input || !sendBtn) return;
 
+            let apiKey = localStorage.getItem('dmx_api_key');
+            if (!apiKey) {
+                apiKey = prompt("为了您的数据安全，请输入您的 dmxapi.cn API Key (仅保存在本地浏览器中):", "sk-kr5ABktbRoXuLjdKDM682MlC4kZ4nFDgyTqYR7VGLPFZXYiY");
+                if (!apiKey) {
+                    alert("未配置 API Key，无法发送消息。");
+                    return;
+                }
+                localStorage.setItem('dmx_api_key', apiKey.trim());
+            }
+
             const userPrompt = (input.value || '').trim();
             if (!userPrompt) return;
 
@@ -2663,7 +2673,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer sk-kr5ABktbRoXuLjdKDM682MlC4kZ4nFDgyTqYR7VGLPFZXYiY`
+                        'Authorization': `Bearer ${apiKey.trim()}`
                     },
                     body: JSON.stringify({
                         model: "MiniMax-M2.5", // 此处设置默认模型，可根据需要调整
